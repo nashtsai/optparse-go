@@ -48,7 +48,7 @@ func (it *IntType) parseArg(opt string, arg []string) interface{} {
     return i;
 }
 
-func (s *IntType) storeDefault(dest, def interface{}) {
+func (it *IntType) storeDefault(dest, def interface{}) {
     ptr, ok := dest.(*int);
     if !ok {
         Error("..", "blargh");
@@ -70,6 +70,26 @@ func Int(a...) *int {
 func IntVar(dest *int, a...) {
     typ := new(IntType);
     createOption(a, dest, typ, Store);
+}
+
+// CallbackType
+type CallbackType struct {
+    fn interface{};
+}
+
+// This is not actually used. The CallbackType can only be used with the
+// CallbackAction.
+func (cb *CallbackType) parseArg(opt string, arg []string) interface{} {
+    return nil;
+}
+
+// Ditto.
+func (cb *CallbackType) storeDefault(dest, def interface{}) {
+}
+
+func Callback(a...) {
+    typ := new(CallbackType);
+    createOption(a, nil, typ, nil);
 }
 
 // array

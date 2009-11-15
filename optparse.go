@@ -29,6 +29,10 @@ func Error(opt, msg string) {
     fmt.Fprintf(os.Stderr, "Error: %s: %s\n%s\n", opt, msg, Usage());
     os.Exit(1);
 }
+func ProgrammerError(msg string) {
+    fmt.Fprintf(os.Stderr, "Programmer error: %s\n", msg);
+    os.Exit(2);
+}
 
 func Usage() string {
     return "";

@@ -69,8 +69,15 @@ func createOption(args interface{}, dest interface{}, typ Type, action *Action) 
             if false { fmt.Printf("%v\n", *f); }
             typ.storeDefault(dest, f.x);
         default:
-            _, ok := field.(*reflect.FuncValue);
+            fn, ok := field.(*reflect.FuncValue);
             if ok {
+                fnType := fn.Type().(*reflect.FuncType);
+                opt.nargs = fnType.NumIn();
+                typ.(*CallbackType).fn = f;
+                tmp := new(Action);
+                tmp.fn = callbackAction.fn;
+                tmp.hasArgs = opt.nargs > 0;
+                action = tmp;
             }
         }
     }

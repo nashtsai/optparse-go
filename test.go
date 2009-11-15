@@ -12,7 +12,12 @@ var c = op.Int("--count", "-c", op.Count)
 var baz = op.StringArray("--baz", op.Store, op.Nargs(3))
 var list = op.StringArrayArray("--list", op.Nargs(3))
 
+
 func main() {
+    op.Callback("--callback", func() { fmt.Println("Callback"); });
+    op.Callback("--callback-arg", "-a", func(i int, s string) {
+        fmt.Printf("Callback: %d %s\n", i, s);
+    });
     op.Parse();
     fmt.Printf("--foo=%s\n", *foo);
     fmt.Printf("--int=%d\n", *i);
