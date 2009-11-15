@@ -29,21 +29,25 @@ import "reflect"
 import "strconv"
 
 type Action struct {
+    name string;
     fn func (*option, string, []string);
     hasArgs bool;
 }
 
 // StoreConst
 var StoreConst = &Action{
+    name: "StoreConst",
     fn: func (c *option, opt string, arg []string) {
         val := reflect.NewValue(c.const_);
-        reflect.NewValue(c.dest).(*reflect.PtrValue).Elem().SetValue(val);
+        elem := reflect.NewValue(c.dest).(*reflect.PtrValue).Elem();
+        elem.SetValue(val);
     },
     hasArgs: false
 }
 
 // StoreTrue
 var StoreTrue = &Action{
+    name: "StoreTrue",
     fn: func (c *option, opt string, arg []string) {
         *c.dest.(*bool) = true;
     },
@@ -52,6 +56,7 @@ var StoreTrue = &Action{
 
 // StoreFalse
 var StoreFalse = &Action{
+    name: "StoreFalse",
     fn: func (c *option, opt string, arg []string) {
         *c.dest.(*bool) = false;
     },
@@ -60,6 +65,7 @@ var StoreFalse = &Action{
 
 // Count
 var Count = &Action{
+    name: "Count",
     fn: func (c *option, opt string, arg []string) {
         c.typ.(incrementable).increment(c.dest);
     },
@@ -68,6 +74,7 @@ var Count = &Action{
 
 // Store
 var Store = &Action{
+    name: "Store",
     fn: func (s *option, optStr string, arg []string) {
         val := reflect.NewValue(s.typ.parseArg(optStr, arg));
         reflect.NewValue(s.dest).(*reflect.PtrValue).Elem().SetValue(val);
@@ -77,6 +84,7 @@ var Store = &Action{
 
 // Append
 var Append = &Action{
+    name: "Append",
     fn: func (a *option, opt string, arg []string) {
         val := a.typ.parseArg(opt, arg);
         a.typ.(array).append(a.dest, val);
@@ -91,6 +99,7 @@ var converters = map[reflect.Type]func (a string) interface{} {
 }
 
 var callbackAction = &Action{
+    name: "callbackAction",
     fn: func (c *option, opt string, arg []string) {
         fn := reflect.NewValue(c.typ.(*CallbackType).fn).(*reflect.FuncValue);
         fnType := fn.Type().(*reflect.FuncType);

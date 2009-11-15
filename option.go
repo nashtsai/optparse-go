@@ -71,6 +71,10 @@ type option struct {
     const_ interface{};
 }
 
+func destTypecheck(dest, value interface{}) bool {
+    return reflect.Typeof(dest).(*reflect.PtrType).Elem() == reflect.Typeof(value);
+}
+
 func createOption(args interface{}, dest interface{}, typ Type, action *Action) Option {
     v := reflect.NewValue(args).(*reflect.StructValue);
     opts := make([]string, v.NumField());
@@ -97,6 +101,9 @@ func createOption(args interface{}, dest interface{}, typ Type, action *Action) 
             opt.argdesc = f.x;
         case *_Default:
             if false { fmt.Printf("%v\n", *f); }
+            if !destTypecheck(dest, f.x) {
+                ProgrammerError(fmt.Sprintf("%s: Type mismatch with default value.", opts[0]));
+            }
             typ.storeDefault(dest, f.x);
         case *_Const:
             opt.const_ = f.x;
@@ -107,6 +114,7 @@ func createOption(args interface{}, dest interface{}, typ Type, action *Action) 
                 opt.nargs = fnType.NumIn();
                 typ.(*CallbackType).fn = f;
                 tmp := new(Action);
+                tmp.name = callbackAction.name;
                 tmp.fn = callbackAction.fn;
                 tmp.hasArgs = opt.nargs > 0;
                 action = tmp;
@@ -115,6 +123,18 @@ func createOption(args interface{}, dest interface{}, typ Type, action *Action) 
     }
     if opt.nargs == 0 && action.hasArgs {
         opt.nargs = 1;
+    }
+    if max == 0 {
+        ProgrammerError("Option has no options!");
+        return nil;
+    }
+    if !typ.validAction(action, opt.nargs) {
+        ProgrammerError(fmt.Sprintf("Option '%s' is using invalid action '%s'.", opts[0], action.name));
+        return nil;
+    }
+    if opt.const_ != nil && !destTypecheck(dest, opt.const_) {
+        ProgrammerError(fmt.Sprintf("%s: Type mismatch with constant value.", opts[0]));
+        return nil;
     }
     opt.action = action;
     opt.setOpts(opts[0:max]);

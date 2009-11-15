@@ -30,6 +30,7 @@ import "strconv"
 type Type interface {
     parseArg(opt string, arg []string) interface{};
     storeDefault(dest, def interface{});
+    validAction(action *Action, nargs int) bool;
 }
 
 // BoolType
@@ -42,6 +43,14 @@ func (b *BoolType) parseArg(opt string, arg []string) interface{} {
 
 func (b *BoolType) storeDefault(dest, def interface{}) {
     *dest.(*bool) = def.(bool);
+}
+
+func (b *BoolType) validAction(action *Action, nargs int) bool {
+    switch action {
+    case StoreTrue, StoreFalse:
+        return true;
+    }
+    return false;
 }
 
 func Bool(a...) *bool {
@@ -65,6 +74,18 @@ func (s *StringType) parseArg(opt string, arg []string) interface{} {
 
 func (s *StringType) storeDefault(dest, def interface{}) {
     *dest.(*string) = def.(string);
+}
+
+func (s *StringType) validAction(action *Action, nargs int) bool {
+    switch action {
+    case StoreConst:
+        return true;
+    case Store, Append:
+        if nargs == 1 {
+            return true;
+        }
+    }
+    return false
 }
 
 func String(a...) *string {
@@ -103,6 +124,17 @@ func (it *IntType) storeDefault(dest, def interface{}) {
     *ptr = def.(int);
 }
 
+func (it *IntType) validAction(action *Action, nargs int) bool {
+    switch action {
+    case StoreConst, Count:
+        return true;
+    case Store, Append:
+        if nargs == 1 {
+            return true;
+        }
+    }
+    return false;
+}
 func (it *IntType) increment(dest interface{}) {
     ptr := dest.(*int);
     *ptr++;
@@ -134,6 +166,12 @@ func (cb *CallbackType) parseArg(opt string, arg []string) interface{} {
 func (cb *CallbackType) storeDefault(dest, def interface{}) {
 }
 
+func (cb *CallbackType) validAction(action *Action, nargs int) bool {
+    // Each callback uses a different Action object, but they all have the
+    // same function.
+    return action.fn == callbackAction.fn;
+}
+
 func Callback(a...) {
     typ := new(CallbackType);
     createOption(a, nil, typ, nil);
@@ -159,6 +197,22 @@ func (sa *StringArrayType) parseArg(opt string, arg []string) interface{} {
 
 func (s *StringArrayType) storeDefault(dest, def interface{}) {
     *dest.(*[]string) = def.([]string);
+}
+
+func (sa *StringArrayType) validAction(action *Action, nargs int) bool {
+    switch action {
+    case StoreConst:
+        return true;
+    case Store:
+        if nargs > 1 {
+            return true;
+        }
+    case Append:
+        if nargs == 1 {
+            return true;
+        }
+    }
+    return false;
 }
 
 func (sa *StringArrayType) append(dest interface{}, val interface{}) {
@@ -207,6 +261,22 @@ func (s *IntArrayType) storeDefault(dest, def interface{}) {
     *dest.(*[]int) = def.([]int);
 }
 
+func (ia *IntArrayType) validAction(action *Action, nargs int) bool {
+    switch action {
+    case StoreConst:
+        return true;
+    case Store:
+        if nargs > 1 {
+            return true;
+        }
+    case Append:
+        if nargs == 1 {
+            return true;
+        }
+    }
+    return false;
+}
+
 func (ia *IntArrayType) append(dest interface{}, val interface{}) {
     i := dest.(*[]int);
     *i = appendInt(*i, val.(int));
@@ -234,6 +304,18 @@ func (sa *StringArrayArrayType) parseArg(opt string, arg []string) interface{} {
 
 func (sa *StringArrayArrayType) storeDefault(dest, def interface{}) {
     *dest.(*[][]string) = def.([][]string);
+}
+
+func (sa *StringArrayArrayType) validAction(action *Action, nargs int) bool {
+    switch action {
+    case StoreConst:
+        return true;
+    case Append:
+        if nargs > 1 {
+            return true;
+        }
+    }
+    return false;
 }
 
 func (sa *StringArrayArrayType) append(dest, val interface{}) {

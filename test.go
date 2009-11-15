@@ -14,7 +14,6 @@ var c = op.Int("--count", "-c", op.Count)
 var baz = op.StringArray("--baz", op.Store, op.Nargs(3))
 var list = op.StringArrayArray("--list", op.Nargs(3))
 
-
 func main() {
     op.Callback("--callback", func() { fmt.Println("Callback"); });
     op.Callback("--callback-arg", "-a", func(i int, s string) {
