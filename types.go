@@ -79,7 +79,6 @@ type array interface {
 
 // StringArrayType
 type StringArrayType struct {
-//    StringType;
 }
 
 func (sa *StringArrayType) parseArg(opt string, arg []string) interface{} {
@@ -109,12 +108,11 @@ func StringArray(a...) *[]string {
 
 func StringArrayVar(dest *[]string, a...) {
     typ := new(StringArrayType);
-    createOption(a, dest, typ, Store);
+    createOption(a, dest, typ, Append);
 }
 
 // IntArrayType
 type IntArrayType struct {
-//    IntType;
 }
 
 func (ia *IntArrayType) parseArg(opt string, arg []string) interface{} {
@@ -156,5 +154,34 @@ func IntArray(a...) *[]int {
 
 func IntArrayVar(dest *[]int, a...) {
     typ := new(IntArrayType);
-    createOption(a, dest, typ, Store);
+    createOption(a, dest, typ, Append);
+}
+
+// StringArrayArray
+type StringArrayArrayType struct {
+}
+
+func (sa *StringArrayArrayType) parseArg(opt string, arg []string) interface{} {
+    return arg;
+}
+
+func (sa *StringArrayArrayType) storeDefault(dest, def interface{}) {
+    *dest.(*[][]string) = def.([][]string);
+}
+
+func (sa *StringArrayArrayType) append(dest, val interface{}) {
+    a := dest.(*[][]string);
+    *a = appendStringArray(*a, val.([]string));
+}
+
+func StringArrayArray(a...) *[][]string {
+    dest := new([][]string);
+    *dest = make([][]string, 0, 5);
+    StringArrayArrayVar(dest, a);
+    return dest;
+}
+
+func StringArrayArrayVar(dest *[][]string, a...) {
+    typ := new(StringArrayArrayType);
+    createOption(a, dest, typ, Append);
 }
