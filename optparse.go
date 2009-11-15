@@ -28,20 +28,32 @@ import "fmt"
 import "os"
 import "strings"
 
-var options = make([]Option, 0, 10)
-func appendOpt(opt Option) {
-    options = options[0:len(options)+1];
-    options[len(options)-1] = opt;
-    if len(options) == cap(options) {
-        tmp := make([]Option, len(options), cap(options) * 2);
-        for i, e := range options {
+type OptionParser struct {
+    options []Option;
+    _args []string;
+}
+
+func Parser() *OptionParser {
+    ret := new(OptionParser);
+    ret.options = make([]Option, 0, 10);
+    ret._args = make([]string, 0, 10);
+    return ret;
+}
+
+//var options = make([]Option, 0, 10)
+func (op *OptionParser) appendOpt(opt Option) {
+    op.options = op.options[0:len(op.options)+1];
+    op.options[len(op.options)-1] = opt;
+    if len(op.options) == cap(op.options) {
+        tmp := make([]Option, len(op.options), cap(op.options) * 2);
+        for i, e := range op.options {
             tmp[i] = e;
         }
-        options = tmp;
+        op.options = tmp;
     }
 }
-func matches(s string) Option {
-    for _, option := range options {
+func (op *OptionParser) matches(s string) Option {
+    for _, option := range op.options {
         if option.matches(s) {
             return option;
         }
@@ -50,7 +62,7 @@ func matches(s string) Option {
 }
 
 func Error(opt, msg string) {
-    fmt.Fprintf(os.Stderr, "Error: %s: %s\n%s\n", opt, msg, Usage());
+    fmt.Fprintf(os.Stderr, "Error: %s: %s\n%s\n", opt, msg/*, Usage()*/);
     os.Exit(1);
 }
 func ProgrammerError(msg string) {
@@ -58,40 +70,43 @@ func ProgrammerError(msg string) {
     os.Exit(2);
 }
 
-func Usage() string {
+func (op *OptionParser) Usage() string {
     return "";
 }
 
-func Parse() {
-    ParseArgs(os.Args[1:len(os.Args)]);
+func (op *OptionParser) Parse() {
+    op.ParseArgs(os.Args[1:len(os.Args)]);
 }
 
-var _args = make([]string, 0, 10);
-func Args() []string {
-    return _args;
+//var _args = make([]string, 0, 10);
+func (op *OptionParser) Args() []string {
+    return op._args;
 }
-func appendArg(arg string) {
-    _args = _args[0:len(_args)+1];
-    _args[len(_args)-1] = arg;
-    if len(_args) == cap(_args) {
-        tmp := make([]string, len(_args), cap(_args) * 2);
-        for i, e := range _args {
+func (op *OptionParser) appendArg(arg string) {
+    op._args = op._args[0:len(op._args)+1];
+    op._args[len(op._args)-1] = arg;
+    if len(op._args) == cap(op._args) {
+        tmp := make([]string, len(op._args), cap(op._args) * 2);
+        for i, e := range op._args {
             tmp[i] = e;
         }
-        _args = tmp;
+        op._args = tmp;
     }
 }
 
-func invalid(arg string) {
+func (op *OptionParser) invalid(arg string) {
     Error(arg, "invalid option");
 }
 
-func doAction(opt, arg string, hasArg bool, args []string, i int) (int, bool) {
+func (op *OptionParser)
+doAction(opt, arg string, hasArg bool, args []string, i int)
+(int, bool)
+{
     var current []string;
     usedArg := false;
-    option := matches(opt);
+    option := op.matches(opt);
     if option == nil {
-        invalid(opt);
+        op.invalid(opt);
         return i, false
     }
     nargs := option.getNargs();
@@ -117,7 +132,7 @@ func doAction(opt, arg string, hasArg bool, args []string, i int) (int, bool) {
     return i, usedArg
 }
 
-func ParseArgs(args []string) {
+func (op *OptionParser) ParseArgs(args []string) {
     var arg string;
     var hasArg bool;
     for i := 0; i < len(args); i++ {
@@ -125,7 +140,7 @@ func ParseArgs(args []string) {
         if opt == "--" {
             i++;
             for ; i < len(args); i++ {
-                appendArg(args[i]);
+                op.appendArg(args[i]);
             }
         } else if strings.HasPrefix(opt, "--") {
             idx := strings.Index(opt, "=");
@@ -136,7 +151,7 @@ func ParseArgs(args []string) {
             } else {
                 hasArg = false;
             }
-            i, _ = doAction(opt, arg, hasArg, args, i);
+            i, _ = op.doAction(opt, arg, hasArg, args, i);
         } else if strings.HasPrefix(opt, "-") {
             for j, c := range opt[1:len(opt)] {
                 s := "-" + string(c);
@@ -147,13 +162,13 @@ func ParseArgs(args []string) {
                     hasArg = true;
                 }
                 var usedArg bool;
-                i, usedArg = doAction(s, arg, hasArg, args, i);
+                i, usedArg = op.doAction(s, arg, hasArg, args, i);
                 if usedArg {
                     break;
                 }
             }
         } else {
-            appendArg(opt);
+            op.appendArg(opt);
         }
     }
 }

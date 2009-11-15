@@ -33,7 +33,7 @@ func Help(h string) *_Help { return &_Help{h} }
 type _Nargs struct { x int; }
 func Nargs(n int) *_Nargs { return &_Nargs{n} }
 type _Argdesc struct { x string; }
-func Argdesc(a string) *_Argdesc { return &_Argdesc{a} }
+func Metavar(a string) *_Argdesc { return &_Argdesc{a} }
 type _Default struct { x interface{}; }
 func Default(d interface{}) *_Default { return &_Default{d} }
 type _Const struct { x interface{}; }
@@ -75,7 +75,10 @@ func destTypecheck(dest, value interface{}) bool {
     return reflect.Typeof(dest).(*reflect.PtrType).Elem() == reflect.Typeof(value);
 }
 
-func createOption(args interface{}, dest interface{}, typ Type, action *Action) Option {
+func (op *OptionParser)
+createOption(args, dest interface{}, typ Type, action *Action)
+Option
+{
     v := reflect.NewValue(args).(*reflect.StructValue);
     opts := make([]string, v.NumField());
     max := 0;
@@ -138,7 +141,7 @@ func createOption(args interface{}, dest interface{}, typ Type, action *Action) 
     }
     opt.action = action;
     opt.setOpts(opts[0:max]);
-    appendOpt(opt);
+    op.appendOpt(opt);
     return opt;
 }
 
