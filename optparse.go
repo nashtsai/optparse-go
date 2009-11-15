@@ -4,7 +4,6 @@ import "fmt"
 import "os"
 import "strings"
 
-//var optMap = make(map[string]Option)
 var options = make([]Option, 0, 10)
 func appendOpt(opt Option) {
     options = options[0:len(options)+1];
@@ -59,12 +58,41 @@ func invalid(arg string) {
     Error(arg, "invalid option");
 }
 
+func doAction(opt, arg string, hasArg bool, args []string, i int) (int, bool) {
+    var current []string;
+    usedArg := false;
+    option := matches(opt);
+    if option == nil {
+        invalid(opt);
+        return i, false
+    }
+    nargs := option.getNargs();
+    if nargs > 0 {
+        current = make([]string, nargs);
+        j := 0;
+        if hasArg {
+            current[0] = arg;
+            j = 1;
+            usedArg = true;
+        }
+        for ; j < len(current); j++{
+            i++;
+            if i >= len(args) {
+                Error(opt, "insufficient arguments for option");
+            }
+            current[j] = args[i];
+        }
+    } else {
+        current = nil;
+    }
+    option.performAction(opt, current);
+    return i, usedArg
+}
+
 func ParseArgs(args []string) {
     var arg string;
-    var option Option;
-    var current []string;
-    //fmt.Printf("%v\n", options);
-    for i := 0; i < len(args); i++ {
+    var hasArg bool;
+    outer: for i := 0; i < len(args); i++ {
         opt := args[i];
         if opt == "--" {
             i++;
@@ -75,34 +103,27 @@ func ParseArgs(args []string) {
             idx := strings.Index(opt, "=");
             if idx != -1 {
                 arg = opt[idx + 1:len(opt)];
+                hasArg = true;
                 opt = opt[0:idx];
-            }
-            //fmt.Printf("%v\n%v\n%v\n", idx, opt, arg);
-            option = matches(opt);
-            if option == nil {
-                invalid(opt);
-                continue
-            }
-            nargs := option.getNargs();
-            if nargs > 0 {
-                current = make([]string, nargs);
-                j := 0;
-                if idx != -1 {
-                    current[0] = arg;
-                    j = 1;
-                }
-                for ; j < len(current); j++{
-                    i++;
-                    if i >= len(args) {
-                        Error(opt, "insufficient arguments for option");
-                    }
-                    current[j] = args[i];
-                }
             } else {
-                current = nil;
+                hasArg = false;
             }
-            option.performAction(opt, current);
+            i, _ = doAction(opt, arg, hasArg, args, i);
         } else if strings.HasPrefix(opt, "-") {
+            for j, c := range opt[1:len(opt)] {
+                s := "-" + string(c);
+                if j == len(opt) - 2 {
+                    hasArg = false;
+                } else {
+                    arg = opt[j + len(s):len(opt)];
+                    hasArg = true;
+                }
+                var usedArg bool;
+                i, usedArg = doAction(s, arg, hasArg, args, i);
+                if usedArg {
+                    break;
+                }
+            }
         } else {
             appendArg(opt);
         }
