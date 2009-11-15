@@ -21,7 +21,7 @@ func main() {
     p.Callback("--callback-arg", "-a", func(i int, s string) {
         fmt.Printf("Callback: %d %s\n", i, s);
     });
-    p.Parse();
+    args := p.Parse();
     fmt.Printf("--flag=%t\n", *flag);
     fmt.Printf("--invert=%t\n", *invert);
     fmt.Printf("--foo=%s\n", *foo);
@@ -29,11 +29,15 @@ func main() {
     fmt.Printf("--bar=[%s]\n", strings.Join(*bar, ","));
     fmt.Printf("--count=%d\n", *c);
     fmt.Printf("--baz=[%s]\n", strings.Join(*baz, ","));
-    fmt.Printf("--list=[\n");
-    for i := 0; i < len(*list); i++ {
-        fmt.Printf("  %v\n", (*list)[i]);
+    if len(*list) > 0 {
+        fmt.Printf("--list=[\n");
+        for i := 0; i < len(*list); i++ {
+            fmt.Printf("  %v\n", (*list)[i]);
+        }
+        fmt.Printf("]\n");
+    } else {
+        fmt.Printf("--list=[]\n");
     }
-    fmt.Printf("]\n");
-    fmt.Printf("%v\n", p.Args());
+    fmt.Printf("%v\n", args);
     fmt.Printf("COLUMNS=%v\n", os.Getenv("COLUMNS"));
 }

@@ -30,13 +30,11 @@ import "strings"
 
 type OptionParser struct {
     options []Option;
-    _args []string;
 }
 
 func Parser() *OptionParser {
     ret := new(OptionParser);
     ret.options = make([]Option, 0, 10);
-    ret._args = make([]string, 0, 10);
     return ret;
 }
 
@@ -74,24 +72,8 @@ func (op *OptionParser) Usage() string {
     return "";
 }
 
-func (op *OptionParser) Parse() {
-    op.ParseArgs(os.Args[1:len(os.Args)]);
-}
-
-//var _args = make([]string, 0, 10);
-func (op *OptionParser) Args() []string {
-    return op._args;
-}
-func (op *OptionParser) appendArg(arg string) {
-    op._args = op._args[0:len(op._args)+1];
-    op._args[len(op._args)-1] = arg;
-    if len(op._args) == cap(op._args) {
-        tmp := make([]string, len(op._args), cap(op._args) * 2);
-        for i, e := range op._args {
-            tmp[i] = e;
-        }
-        op._args = tmp;
-    }
+func (op *OptionParser) Parse() []string {
+    return op.ParseArgs(os.Args[1:len(os.Args)]);
 }
 
 func (op *OptionParser) invalid(arg string) {
@@ -132,7 +114,8 @@ doAction(opt, arg string, hasArg bool, args []string, i int)
     return i, usedArg
 }
 
-func (op *OptionParser) ParseArgs(args []string) {
+func (op *OptionParser) ParseArgs(args []string) []string {
+    positional_args := make([]string, 0, len(args));
     var arg string;
     var hasArg bool;
     for i := 0; i < len(args); i++ {
@@ -140,7 +123,7 @@ func (op *OptionParser) ParseArgs(args []string) {
         if opt == "--" {
             i++;
             for ; i < len(args); i++ {
-                op.appendArg(args[i]);
+                positional_args = appendString(positional_args, args[i])
             }
         } else if strings.HasPrefix(opt, "--") {
             idx := strings.Index(opt, "=");
@@ -168,7 +151,8 @@ func (op *OptionParser) ParseArgs(args []string) {
                 }
             }
         } else {
-            op.appendArg(opt);
+            positional_args = appendString(positional_args, opt)
         }
     }
+    return positional_args;
 }
