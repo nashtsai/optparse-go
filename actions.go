@@ -34,17 +34,31 @@ type Action struct {
 }
 
 // StoreConst
-type StoreConst struct {
-    option;
+var StoreConst = &Action{
+    fn: func (c *option, opt string, arg []string) {
+        val := reflect.NewValue(c.const_);
+        reflect.NewValue(c.dest).(*reflect.PtrValue).Elem().SetValue(val);
+    },
+    hasArgs: false
+}
+
+// StoreTrue
+var StoreTrue = &Action{
+    fn: func (c *option, opt string, arg []string) {
+        *c.dest.(*bool) = true;
+    },
+    hasArgs: false
+}
+
+// StoreFalse
+var StoreFalse = &Action{
+    fn: func (c *option, opt string, arg []string) {
+        *c.dest.(*bool) = false;
+    },
+    hasArgs: false
 }
 
 // Count
-/*
-type Count struct {
-    option;
-}
-*/
-
 var Count = &Action{
     fn: func (c *option, opt string, arg []string) {
         c.typ.(incrementable).increment(c.dest);

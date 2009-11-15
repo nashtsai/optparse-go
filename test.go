@@ -5,6 +5,8 @@ import "strings"
 
 import op "optparse";
 
+var flag = op.Bool("--flag", "-t")
+var invert = op.Bool("--invert", "-T", op.StoreFalse)
 var foo = op.String("--foo", "-f", op.Default("default"))
 var i = op.Int("--int", "-i")
 var bar = op.StringArray("--bar", "-b", op.Default([]string{"one,two"}))
@@ -19,6 +21,8 @@ func main() {
         fmt.Printf("Callback: %d %s\n", i, s);
     });
     op.Parse();
+    fmt.Printf("--flag=%t\n", *flag);
+    fmt.Printf("--invert=%t\n", *invert);
     fmt.Printf("--foo=%s\n", *foo);
     fmt.Printf("--int=%d\n", *i);
     fmt.Printf("--bar=[%s]\n", strings.Join(*bar, ","));

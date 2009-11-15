@@ -36,6 +36,8 @@ type _Argdesc struct { x string; }
 func Argdesc(a string) *_Argdesc { return &_Argdesc{a} }
 type _Default struct { x interface{}; }
 func Default(d interface{}) *_Default { return &_Default{d} }
+type _Const struct { x interface{}; }
+func Const(c interface{}) *_Const { return &_Const{c} }
 
 /*
 const (
@@ -66,6 +68,7 @@ type option struct {
     argdesc string;
     nargs int;
     action *Action;
+    const_ interface{};
 }
 
 func createOption(args interface{}, dest interface{}, typ Type, action *Action) Option {
@@ -83,6 +86,9 @@ func createOption(args interface{}, dest interface{}, typ Type, action *Action) 
             max++;
         case *Action:
             action = f;
+            if action == StoreFalse {
+                typ.storeDefault(dest, true);
+            }
         case *_Help:
             opt.help = f.x;
         case *_Nargs:
@@ -92,6 +98,8 @@ func createOption(args interface{}, dest interface{}, typ Type, action *Action) 
         case *_Default:
             if false { fmt.Printf("%v\n", *f); }
             typ.storeDefault(dest, f.x);
+        case *_Const:
+            opt.const_ = f.x;
         default:
             fn, ok := field.(*reflect.FuncValue);
             if ok {

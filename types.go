@@ -32,6 +32,29 @@ type Type interface {
     storeDefault(dest, def interface{});
 }
 
+// BoolType
+type BoolType struct {
+}
+
+func (b *BoolType) parseArg(opt string, arg []string) interface{} {
+    return nil;
+}
+
+func (b *BoolType) storeDefault(dest, def interface{}) {
+    *dest.(*bool) = def.(bool);
+}
+
+func Bool(a...) *bool {
+    dest := new(bool);
+    BoolVar(dest, a);
+    return dest;
+}
+
+func BoolVar(dest *bool, a...) {
+    typ := new(BoolType);
+    createOption(a, dest, typ, StoreTrue);
+}
+
 // StringType
 type StringType struct {
 }
