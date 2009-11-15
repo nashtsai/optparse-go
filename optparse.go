@@ -92,7 +92,7 @@ func doAction(opt, arg string, hasArg bool, args []string, i int) (int, bool) {
 func ParseArgs(args []string) {
     var arg string;
     var hasArg bool;
-    outer: for i := 0; i < len(args); i++ {
+    for i := 0; i < len(args); i++ {
         opt := args[i];
         if opt == "--" {
             i++;
