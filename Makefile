@@ -1,6 +1,6 @@
 include $(GOROOT)/src/Make.$(GOARCH)
 
-OPTFILES=optparse.go actions.go option.go types.go util.go
+OPTFILES=optparse.go actions.go option.go types.go util.go help.go
 
 test: test.$(O)
 	$(LD) -o test test.$(O)

@@ -24,6 +24,9 @@ OTHER DEALINGS IN THE SOFTWARE.
 */
 package optparse
 
+import "strings"
+import "unicode"
+
 func appendString(arr []string, s string) []string {
     if len(arr) == cap(arr) {
         tmp := make([]string, len(arr), cap(arr) * 2);
@@ -62,3 +65,29 @@ func appendStringArray(arr [][]string, a []string) [][]string {
     arr[len(arr)-1] = a;
     return arr;
 }
+
+func splitWords(s string) []string {
+    if s == "" {
+        return make([]string, 0);
+    }
+    s = strings.TrimSpace(s);
+    words := make([]string, 0, 5);
+    start := 0;
+    inWhitespace := false;
+    for end, rune := range s {
+        if unicode.IsSpace(rune) {
+            if !inWhitespace {
+                words = appendString(words, s[start:end]);
+            }
+            inWhitespace = true;
+        } else {
+            if inWhitespace {
+                start = end;
+            }
+            inWhitespace = false;
+        }
+    }
+    words = appendString(words, s[start:len(s)]);
+    return words;
+}
+

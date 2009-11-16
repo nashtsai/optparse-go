@@ -1,7 +1,6 @@
 package main
 
 import "fmt"
-import "os"
 import "strings"
 
 import op "optparse";
@@ -10,7 +9,7 @@ var p = op.Parser()
 var flag = p.Bool("--flag", "-t")
 var invert = p.Bool("--invert", "-T", op.StoreFalse)
 var foo = p.String("--foo", "-f", op.Default("default"))
-var i = p.Int("--int", "-i")
+var i = p.Int("--int", "-i", op.Default(78))
 var bar = p.StringArray("--bar", "-b", op.Default([]string{"one,two"}))
 var c = p.Int("--count", "-c", op.Count)
 var baz = p.StringArray("--baz", op.Store, op.Nargs(3))
@@ -39,5 +38,10 @@ func main() {
         fmt.Printf("--list=[]\n");
     }
     fmt.Printf("%v\n", args);
-    fmt.Printf("COLUMNS=%v\n", os.Getenv("COLUMNS"));
+    s := "This is some sample text. Watermelon. This is some sample text. Watermelon. This is some sample text.\n Watermelon.     This is some sample text. Watermelon. This is some sample text. Watermelon.";
+    lines := op.Linewrap(s, *i);
+    format := fmt.Sprintf("|%%-%ds|\n", *i);
+    for _, line := range lines {
+        fmt.Printf(format, line);
+    }
 }
