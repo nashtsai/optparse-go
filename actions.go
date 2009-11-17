@@ -24,21 +24,18 @@ OTHER DEALINGS IN THE SOFTWARE.
 */
 package optparse
 
-import "fmt"
-import "os"
 import "reflect"
-import "strconv"
 
 type Action struct {
     name string;
-    fn func (*OptionParser, *option, string, []string);
+    fn func (*option, string, []string);
     hasArgs bool;
 }
 
 // StoreConst
 var StoreConst = &Action{
     name: "StoreConst",
-    fn: func (op *OptionParser, c *option, opt string, arg []string) {
+    fn: func (c *option, opt string, arg []string) {
         val := reflect.NewValue(c.const_);
         elem := reflect.NewValue(c.dest).(*reflect.PtrValue).Elem();
         elem.SetValue(val);
@@ -49,7 +46,7 @@ var StoreConst = &Action{
 // StoreTrue
 var StoreTrue = &Action{
     name: "StoreTrue",
-    fn: func (op *OptionParser, c *option, opt string, arg []string) {
+    fn: func (c *option, opt string, arg []string) {
         *c.dest.(*bool) = true;
     },
     hasArgs: false
@@ -58,7 +55,7 @@ var StoreTrue = &Action{
 // StoreFalse
 var StoreFalse = &Action{
     name: "StoreFalse",
-    fn: func (op *OptionParser, c *option, opt string, arg []string) {
+    fn: func (c *option, opt string, arg []string) {
         *c.dest.(*bool) = false;
     },
     hasArgs: false
@@ -67,7 +64,7 @@ var StoreFalse = &Action{
 // Count
 var Count = &Action{
     name: "Count",
-    fn: func (op *OptionParser, c *option, opt string, arg []string) {
+    fn: func (c *option, opt string, arg []string) {
         c.typ.(incrementable).increment(c.dest);
     },
     hasArgs: false
@@ -76,7 +73,7 @@ var Count = &Action{
 // Store
 var Store = &Action{
     name: "Store",
-    fn: func (op *OptionParser, s *option, optStr string, arg []string) {
+    fn: func (s *option, optStr string, arg []string) {
         val := reflect.NewValue(s.typ.parseArg(optStr, arg));
         reflect.NewValue(s.dest).(*reflect.PtrValue).Elem().SetValue(val);
     },
@@ -86,7 +83,7 @@ var Store = &Action{
 // Append
 var Append = &Action{
     name: "Append",
-    fn: func (op *OptionParser, a *option, opt string, arg []string) {
+    fn: func (a *option, opt string, arg []string) {
         val := a.typ.parseArg(opt, arg);
         a.typ.(array).append(a.dest, val);
     },
@@ -95,34 +92,13 @@ var Append = &Action{
 
 var callbackAction = &Action{
     name: "callbackAction",
-    fn: func (op *OptionParser, c *option, opt string, arg []string) {
-        fn := reflect.NewValue(c.typ.(*CallbackType).fn).(*reflect.FuncValue);
-        fnType := fn.Type().(*reflect.FuncType);
-        values := make([]reflect.Value, len(arg));
-        for i := 0; i < len(arg); i++ {
-            switch v := fnType.In(i).(type) {
-            case *reflect.StringType:
-                values[i] = reflect.NewValue(arg[i]);
-            case *reflect.IntType:
-                x, ok := strconv.Atoi(arg[i]);
-                if ok != nil {
-                    Error(opt, fmt.Sprintf("'%s' is not an integer", arg[i]));
-                }
-                values[i] = reflect.NewValue(x);
-            }
-        }
-        fn.Call(values);
-    },
+    fn: nil,
     // this is ignored
     hasArgs: true
 }
 
 var helpAction = &Action{
     name: "helpAction",
-    fn: func (op *OptionParser, c *option, opt string, arg []string) {
-        usage := op.Usage();
-        fmt.Println(usage);
-        os.Exit(0);
-    },
+    fn: nil,
     hasArgs: false
 }

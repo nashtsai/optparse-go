@@ -30,13 +30,13 @@ import "strings"
 
 type OptionParser struct {
     options []Option;
-    _usage string;
+    usage string;
 }
 
 func Parser(usage string) *OptionParser {
     ret := new(OptionParser);
     ret.options = make([]Option, 0, 10);
-    ret._usage = usage;
+    ret.usage = usage;
     return ret;
 }
 
@@ -62,7 +62,7 @@ func (op *OptionParser) matches(s string) Option {
 }
 
 func Error(opt, msg string) {
-    fmt.Fprintf(os.Stderr, "Error: %s: %s\n%s\n", opt, msg/*, Usage()*/);
+    fmt.Fprintf(os.Stderr, "Error: %s: %s\n", opt, msg/*, Usage()*/);
     os.Exit(1);
 }
 func ProgrammerError(msg string) {
@@ -108,7 +108,7 @@ doAction(opt, arg string, hasArg bool, args []string, i int)
     } else {
         current = nil;
     }
-    option.performAction(op, opt, current);
+    option.performAction(opt, current);
     return i, usedArg
 }
 

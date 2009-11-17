@@ -39,18 +39,10 @@ func Default(d interface{}) *_Default { return &_Default{d} }
 type _Const struct { x interface{}; }
 func Const(c interface{}) *_Const { return &_Const{c} }
 
-/*
-const (
-    Store = Action(iota);
-    Append;
-    Count;
-)
-*/
-
 type Option interface {
     getNargs() int;
     hasArgs() bool;
-    performAction(*OptionParser, string, []string);
+    performAction(string, []string);
     //setType(Type);
     //setDest(interface{});
     getHelp() string;
@@ -75,14 +67,13 @@ func destTypecheck(dest, value interface{}) bool {
     return reflect.Typeof(dest).(*reflect.PtrType).Elem() == reflect.Typeof(value);
 }
 
-func (op *OptionParser)
+func (opt *option)
 createOption(args, dest interface{}, typ Type, action *Action)
 Option
 {
     v := reflect.NewValue(args).(*reflect.StructValue);
     opts := make([]string, v.NumField());
     max := 0;
-    opt := new(option);
     opt.typ = typ;
     opt.dest = dest;
     for i := 0; i < v.NumField(); i++ {
@@ -116,18 +107,14 @@ Option
                 fnType := fn.Type().(*reflect.FuncType);
                 opt.nargs = fnType.NumIn();
                 typ.(*CallbackType).fn = f;
-                tmp := new(Action);
-                tmp.name = callbackAction.name;
-                tmp.fn = callbackAction.fn;
-                tmp.hasArgs = opt.nargs > 0;
-                action = tmp;
             }
         }
     }
+    opt.action = action;
     if action == helpAction && opt.help == "" {
         opt.help = "Print this help message and exit.";
     }
-    if opt.nargs == 0 && action.hasArgs {
+    if opt.nargs == 0 && typ.(Option).hasArgs() {
         opt.nargs = 1;
     }
     if max == 0 {
@@ -142,7 +129,6 @@ Option
         ProgrammerError(fmt.Sprintf("%s: Type mismatch with constant value.", opts[0]));
         return nil;
     }
-    opt.action = action;
     opt.setOpts(opts[0:max]);
     if opt.argdesc == "" && opt.nargs > 0 {
         if len(opt.longOpts) > 0 {
@@ -161,12 +147,11 @@ Option
             return x;
         }, opt.argdesc);
     }
-    op.appendOpt(opt);
     return opt;
 }
 
-func (o *option) performAction(op *OptionParser, optStr string, arg []string) {
-    o.action.fn(op, o, optStr, arg);
+func (o *option) performAction(optStr string, arg []string) {
+    o.action.fn(o, optStr, arg);
 }
 
 func (o *option) hasArgs() bool {
@@ -221,13 +206,6 @@ func (o *option) getNargs() int {
 
 func (o *option) getHelp() string {
     return o.help;
-}
-
-func (o *option) setType(t Type) {
-    o.typ = t;
-}
-func (o *option) setDest(ptr interface{}) {
-    o.dest = ptr;
 }
 
 func (o *option) matches(opt string) bool {

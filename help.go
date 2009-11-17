@@ -63,7 +63,7 @@ func (op *OptionParser) Usage() string {
     //lines := make([]string, 0, 10);
     _, binName := path.Split(os.Args[0]);
     lines := []string {
-        fmt.Sprintf("Usage: %s %s", binName, op._usage),
+        fmt.Sprintf("Usage: %s %s", binName, op.usage),
         "",
         "Options:"
     };
