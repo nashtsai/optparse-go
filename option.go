@@ -49,12 +49,18 @@ type Option interface {
     setOpts([]string);
     String() string;
     matches(string) bool;
+
+    parseArg(opt string, arg []string) interface{};
+    storeDefault(dest, def interface{});
+    validAction(action *Action, nargs int) bool;
+    getOption() *option;
+    getDest() interface{};
+    getConst() interface{};
 }
 
 type option struct {
     longOpts []string;
     shortOpts []string;
-    typ Type;
     dest interface{};
     help string;
     argdesc string;
@@ -67,14 +73,14 @@ func destTypecheck(dest, value interface{}) bool {
     return reflect.Typeof(dest).(*reflect.PtrType).Elem() == reflect.Typeof(value);
 }
 
-func (opt *option)
-createOption(args, dest interface{}, typ Type, action *Action)
+func (op *OptionParser)
+createOption(args, dest interface{}, typ Option, action *Action)
 Option
 {
     v := reflect.NewValue(args).(*reflect.StructValue);
     opts := make([]string, v.NumField());
     max := 0;
-    opt.typ = typ;
+    opt := typ.getOption();
     opt.dest = dest;
     for i := 0; i < v.NumField(); i++ {
         field := v.Field(i);
@@ -114,7 +120,7 @@ Option
     if action == helpAction && opt.help == "" {
         opt.help = "Print this help message and exit.";
     }
-    if opt.nargs == 0 && typ.(Option).hasArgs() {
+    if opt.nargs == 0 && typ.hasArgs() {
         opt.nargs = 1;
     }
     if max == 0 {
@@ -129,7 +135,7 @@ Option
         ProgrammerError(fmt.Sprintf("%s: Type mismatch with constant value.", opts[0]));
         return nil;
     }
-    opt.setOpts(opts[0:max]);
+    typ.setOpts(opts[0:max]);
     if opt.argdesc == "" && opt.nargs > 0 {
         if len(opt.longOpts) > 0 {
             tmp := opt.longOpts[0];
@@ -147,7 +153,29 @@ Option
             return x;
         }, opt.argdesc);
     }
-    return opt;
+    op.appendOpt(typ);
+    return typ;
+}
+
+func (o *option) getOption() *option {
+    return o;
+}
+
+func (o *option) getDest() interface{} {
+    return o.dest;
+}
+
+func (o *option) getConst() interface{} {
+    return o.const_;
+}
+
+func (o *option) parseArg(opt string, arg []string) interface{} {
+    return nil;
+}
+
+func (o *option) storeDefault(dest, def interface{}) {}
+func (o *option) validAction(action *Action, nargs int) bool {
+    return false;
 }
 
 func (o *option) performAction(optStr string, arg []string) {

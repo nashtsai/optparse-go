@@ -28,16 +28,16 @@ import "reflect"
 
 type Action struct {
     name string;
-    fn func (*option, string, []string);
+    fn func (Option, string, []string);
     hasArgs bool;
 }
 
 // StoreConst
 var StoreConst = &Action{
     name: "StoreConst",
-    fn: func (c *option, opt string, arg []string) {
-        val := reflect.NewValue(c.const_);
-        elem := reflect.NewValue(c.dest).(*reflect.PtrValue).Elem();
+    fn: func (c Option, opt string, arg []string) {
+        val := reflect.NewValue(c.getConst());
+        elem := reflect.NewValue(c.getDest()).(*reflect.PtrValue).Elem();
         elem.SetValue(val);
     },
     hasArgs: false
@@ -46,8 +46,8 @@ var StoreConst = &Action{
 // StoreTrue
 var StoreTrue = &Action{
     name: "StoreTrue",
-    fn: func (c *option, opt string, arg []string) {
-        *c.dest.(*bool) = true;
+    fn: func (c Option, opt string, arg []string) {
+        *c.getDest().(*bool) = true;
     },
     hasArgs: false
 }
@@ -55,8 +55,8 @@ var StoreTrue = &Action{
 // StoreFalse
 var StoreFalse = &Action{
     name: "StoreFalse",
-    fn: func (c *option, opt string, arg []string) {
-        *c.dest.(*bool) = false;
+    fn: func (c Option, opt string, arg []string) {
+        *c.getDest().(*bool) = false;
     },
     hasArgs: false
 }
@@ -64,8 +64,8 @@ var StoreFalse = &Action{
 // Count
 var Count = &Action{
     name: "Count",
-    fn: func (c *option, opt string, arg []string) {
-        c.typ.(incrementable).increment(c.dest);
+    fn: func (c Option, opt string, arg []string) {
+        c.(incrementable).increment(c.getDest());
     },
     hasArgs: false
 }
@@ -73,9 +73,9 @@ var Count = &Action{
 // Store
 var Store = &Action{
     name: "Store",
-    fn: func (s *option, optStr string, arg []string) {
-        val := reflect.NewValue(s.typ.parseArg(optStr, arg));
-        reflect.NewValue(s.dest).(*reflect.PtrValue).Elem().SetValue(val);
+    fn: func (s Option, optStr string, arg []string) {
+        val := reflect.NewValue(s.parseArg(optStr, arg));
+        reflect.NewValue(s.getDest()).(*reflect.PtrValue).Elem().SetValue(val);
     },
     hasArgs: true
 }
@@ -83,9 +83,9 @@ var Store = &Action{
 // Append
 var Append = &Action{
     name: "Append",
-    fn: func (a *option, opt string, arg []string) {
-        val := a.typ.parseArg(opt, arg);
-        a.typ.(array).append(a.dest, val);
+    fn: func (a Option, opt string, arg []string) {
+        val := a.parseArg(opt, arg);
+        a.(array).append(a.getDest(), val);
     },
     hasArgs: true
 }

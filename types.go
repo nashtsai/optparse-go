@@ -29,19 +29,18 @@ import "os"
 import "reflect"
 import "strconv"
 
+/*
 type Type interface {
     parseArg(opt string, arg []string) interface{};
     storeDefault(dest, def interface{});
     validAction(action *Action, nargs int) bool;
+    getOption() *option;
 }
+*/
 
 // BoolType
 type BoolType struct {
     option;
-}
-
-func (b *BoolType) parseArg(opt string, arg []string) interface{} {
-    return nil;
 }
 
 func (b *BoolType) storeDefault(dest, def interface{}) {
@@ -64,7 +63,7 @@ func (op *OptionParser) Bool(a...) *bool {
 
 func (op *OptionParser) BoolVar(dest *bool, a...) {
     typ := new(BoolType);
-    op.appendOpt(typ.createOption(a, dest, typ, StoreTrue));
+    op.createOption(a, dest, typ, StoreTrue);
 }
 
 // StringType
@@ -100,7 +99,7 @@ func (op *OptionParser) String(a...) *string {
 
 func (op *OptionParser) StringVar(dest *string, a...) {
     typ := new(StringType);
-    op.appendOpt(typ.createOption(a, dest, typ, Store));
+    op.createOption(a, dest, typ, Store);
 }
 
 // incrementable
@@ -153,19 +152,13 @@ func (op *OptionParser) Int(a...) *int {
 
 func (op *OptionParser) IntVar(dest *int, a...) {
     typ := new(IntType);
-    op.appendOpt(typ.createOption(a, dest, typ, Store));
+    op.createOption(a, dest, typ, Store);
 }
 
 // CallbackType
 type CallbackType struct {
     option;
     fn interface{};
-}
-
-// This is not actually used. The CallbackType can only be used with the
-// CallbackAction.
-func (cb *CallbackType) parseArg(opt string, arg []string) interface{} {
-    return nil;
 }
 
 // Ditto.
@@ -203,8 +196,7 @@ func (cb *CallbackType) performAction(optStr string, arg []string) {
 
 func (op *OptionParser) Callback(a...) {
     typ := new(CallbackType);
-    typ.createOption(a, nil, typ, nil);
-    op.appendOpt(typ);
+    op.createOption(a, nil, typ, nil);
 }
 
 // array
@@ -260,7 +252,7 @@ func (op *OptionParser) StringArray(a...) *[]string {
 
 func (op *OptionParser) StringArrayVar(dest *[]string, a...) {
     typ := new(StringArrayType);
-    op.appendOpt(typ.createOption(a, dest, typ, Append));
+    op.createOption(a, dest, typ, Append);
 }
 
 // IntArrayType
@@ -323,7 +315,7 @@ func (op *OptionParser) IntArray(a...) *[]int {
 
 func (op *OptionParser) IntArrayVar(dest *[]int, a...) {
     typ := new(IntArrayType);
-    op.appendOpt(typ.createOption(a, dest, typ, Append));
+    op.createOption(a, dest, typ, Append);
 }
 
 // StringArrayArray
@@ -365,17 +357,13 @@ func (op *OptionParser) StringArrayArray(a...) *[][]string {
 
 func (op *OptionParser) StringArrayArrayVar(dest *[][]string, a...) {
     typ := new(StringArrayArrayType);
-    op.appendOpt(typ.createOption(a, dest, typ, Append));
+    op.createOption(a, dest, typ, Append);
 }
 
 // HelpType
 type HelpType struct {
     option;
     op *OptionParser;
-}
-
-func (h *HelpType) parseArg(opt string, arg []string) interface{} {
-    return nil;
 }
 
 func (h *HelpType) storeDefault(dest, def interface{}) {
@@ -394,6 +382,5 @@ func (h *HelpType) performAction(optStr string, arg []string) {
 func (op *OptionParser) Help(a...) {
     typ := new(HelpType);
     typ.op = op;
-    typ.createOption(a, nil, typ, helpAction);
-    op.appendOpt(typ);
+    op.createOption(a, nil, typ, helpAction);
 }
