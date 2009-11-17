@@ -24,21 +24,23 @@ OTHER DEALINGS IN THE SOFTWARE.
 */
 package optparse
 
+import "os"
 import "reflect"
 
 type Action struct {
     name string;
-    fn func (Option, string, []string);
+    fn func (Option, []string) os.Error;
     hasArgs bool;
 }
 
 // StoreConst
 var StoreConst = &Action{
     name: "StoreConst",
-    fn: func (c Option, opt string, arg []string) {
+    fn: func (c Option, arg []string) os.Error {
         val := reflect.NewValue(c.getConst());
         elem := reflect.NewValue(c.getDest()).(*reflect.PtrValue).Elem();
         elem.SetValue(val);
+        return nil;
     },
     hasArgs: false
 }
@@ -46,8 +48,9 @@ var StoreConst = &Action{
 // StoreTrue
 var StoreTrue = &Action{
     name: "StoreTrue",
-    fn: func (c Option, opt string, arg []string) {
+    fn: func (c Option, arg []string) os.Error {
         *c.getDest().(*bool) = true;
+        return nil;
     },
     hasArgs: false
 }
@@ -55,8 +58,9 @@ var StoreTrue = &Action{
 // StoreFalse
 var StoreFalse = &Action{
     name: "StoreFalse",
-    fn: func (c Option, opt string, arg []string) {
+    fn: func (c Option, arg []string) os.Error {
         *c.getDest().(*bool) = false;
+        return nil;
     },
     hasArgs: false
 }
@@ -64,8 +68,9 @@ var StoreFalse = &Action{
 // Count
 var Count = &Action{
     name: "Count",
-    fn: func (c Option, opt string, arg []string) {
+    fn: func (c Option, arg []string) os.Error {
         c.(incrementable).increment(c.getDest());
+        return nil;
     },
     hasArgs: false
 }
@@ -73,9 +78,14 @@ var Count = &Action{
 // Store
 var Store = &Action{
     name: "Store",
-    fn: func (s Option, optStr string, arg []string) {
-        val := reflect.NewValue(s.parseArg(optStr, arg));
+    fn: func (s Option, arg []string) os.Error {
+        i, err := s.parseArg(arg);
+        if err != nil {
+            return err;
+        }
+        val := reflect.NewValue(i);
         reflect.NewValue(s.getDest()).(*reflect.PtrValue).Elem().SetValue(val);
+        return nil;
     },
     hasArgs: true
 }
@@ -83,9 +93,13 @@ var Store = &Action{
 // Append
 var Append = &Action{
     name: "Append",
-    fn: func (a Option, opt string, arg []string) {
-        val := a.parseArg(opt, arg);
+    fn: func (a Option, arg []string) os.Error {
+        val, err := a.parseArg(arg);
+        if err != nil {
+            return err;
+        }
         a.(array).append(a.getDest(), val);
+        return nil;
     },
     hasArgs: true
 }

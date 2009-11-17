@@ -61,12 +61,12 @@ func (op *OptionParser) matches(s string) Option {
     return nil;
 }
 
-func Error(opt, msg string) {
-    fmt.Fprintf(os.Stderr, "Error: %s: %s\n", opt, msg/*, Usage()*/);
+func (op *OptionParser) Error(opt, msg string) {
+    fmt.Fprintf(os.Stderr, "Error: %s: %s\n%s\n", opt, msg, op.Usage());
     os.Exit(1);
 }
-func ProgrammerError(msg string) {
-    fmt.Fprintf(os.Stderr, "Programmer error: %s\n", msg);
+func (op *OptionParser) ProgrammerError(opt, msg string) {
+    fmt.Fprintf(os.Stderr, "Programmer error: %s: %s\n", opt, msg);
     os.Exit(2);
 }
 
@@ -75,7 +75,7 @@ func (op *OptionParser) Parse() []string {
 }
 
 func (op *OptionParser) invalid(arg string) {
-    Error(arg, "invalid option");
+    op.Error(arg, "invalid option");
 }
 
 func (op *OptionParser)
@@ -101,14 +101,17 @@ doAction(opt, arg string, hasArg bool, args []string, i int)
         for ; j < len(current); j++{
             i++;
             if i >= len(args) {
-                Error(opt, "insufficient arguments for option");
+                op.Error(opt, "insufficient arguments for option");
             }
             current[j] = args[i];
         }
     } else {
         current = nil;
     }
-    option.performAction(opt, current);
+    err := option.performAction(current);
+    if err != nil {
+        op.Error(opt, err.String());
+    }
     return i, usedArg
 }
 

@@ -29,22 +29,19 @@ import "os"
 import "reflect"
 import "strconv"
 
-/*
-type Type interface {
-    parseArg(opt string, arg []string) interface{};
-    storeDefault(dest, def interface{});
-    validAction(action *Action, nargs int) bool;
-    getOption() *option;
-}
-*/
-
 // BoolType
 type BoolType struct {
     option;
 }
 
-func (b *BoolType) storeDefault(dest, def interface{}) {
-    *dest.(*bool) = def.(bool);
+func (b *BoolType) storeDefault(dest, def interface{}) os.Error {
+    var ok bool;
+    ptr := dest.(*bool);
+    *ptr, ok = def.(bool);
+    if !ok {
+        return os.NewError(fmt.Sprintf("Expected bool as default value, not '%v'", def));
+    }
+    return nil;
 }
 
 func (b *BoolType) validAction(action *Action, nargs int) bool {
@@ -71,12 +68,21 @@ type StringType struct {
     option;
 }
 
-func (s *StringType) parseArg(opt string, arg []string) interface{} {
-    return arg[0];
+func (s *StringType)
+parseArg(arg []string)
+(interface{}, os.Error)
+{
+    return arg[0], nil;
 }
 
-func (s *StringType) storeDefault(dest, def interface{}) {
-    *dest.(*string) = def.(string);
+func (s *StringType) storeDefault(dest, def interface{}) os.Error {
+    var ok bool;
+    ptr := dest.(*string);
+    *ptr, ok = def.(string);
+    if !ok {
+        return os.NewError(fmt.Sprintf("Expected string as default value, not '%v'", def));
+    }
+    return nil;
 }
 
 func (s *StringType) validAction(action *Action, nargs int) bool {
@@ -112,20 +118,25 @@ type IntType struct {
     option;
 }
 
-func (it *IntType) parseArg(opt string, arg []string) interface{} {
+func (it *IntType)
+parseArg(arg []string)
+(interface{}, os.Error)
+{
     i, ok := strconv.Atoi(arg[0]);
     if ok != nil {
-        Error(opt, fmt.Sprintf("'%s' is not an integer", arg[0]));
+        return nil, os.NewError(fmt.Sprintf("'%s' is not an integer", arg[0]));
     }
-    return i;
+    return i, nil;
 }
 
-func (it *IntType) storeDefault(dest, def interface{}) {
-    ptr, ok := dest.(*int);
+func (it *IntType) storeDefault(dest, def interface{}) os.Error {
+    var ok bool;
+    ptr := dest.(*int);
+    *ptr, ok = def.(int);
     if !ok {
-        Error("..", "blargh");
+        return os.NewError(fmt.Sprintf("Expected integer as default value, not '%v'", def));
     }
-    *ptr = def.(int);
+    return nil;
 }
 
 func (it *IntType) validAction(action *Action, nargs int) bool {
@@ -161,10 +172,6 @@ type CallbackType struct {
     fn interface{};
 }
 
-// Ditto.
-func (cb *CallbackType) storeDefault(dest, def interface{}) {
-}
-
 func (cb *CallbackType) validAction(action *Action, nargs int) bool {
     // Each callback uses a different Action object, but they all have the
     // same function.
@@ -175,7 +182,7 @@ func (cb *CallbackType) hasArgs() bool {
     return cb.nargs > 0;
 }
 
-func (cb *CallbackType) performAction(optStr string, arg []string) {
+func (cb *CallbackType) performAction(arg []string) os.Error {
     fn := reflect.NewValue(cb.fn).(*reflect.FuncValue);
     fnType := fn.Type().(*reflect.FuncType);
     values := make([]reflect.Value, len(arg));
@@ -186,12 +193,13 @@ func (cb *CallbackType) performAction(optStr string, arg []string) {
         case *reflect.IntType:
             x, ok := strconv.Atoi(arg[i]);
             if ok != nil {
-                Error(optStr, fmt.Sprintf("'%s' is not an integer", arg[i]));
+                return os.NewError(fmt.Sprintf("'%s' is not an integer", arg[i]));
             }
             values[i] = reflect.NewValue(x);
         }
     }
     fn.Call(values);
+    return nil;
 }
 
 func (op *OptionParser) Callback(a...) {
@@ -209,17 +217,26 @@ type StringArrayType struct {
     option;
 }
 
-func (sa *StringArrayType) parseArg(opt string, arg []string) interface{} {
+func (sa *StringArrayType)
+parseArg(arg []string)
+(interface{}, os.Error)
+{
     if len(arg) == 1 {
-        return arg[0];
+        return arg[0], nil;
     } else {
-        return arg;
+        return arg, nil;
     }
-    return nil;
+    return nil, os.NewError("StringArrayType.parseArg");
 }
 
-func (s *StringArrayType) storeDefault(dest, def interface{}) {
-    *dest.(*[]string) = def.([]string);
+func (s *StringArrayType) storeDefault(dest, def interface{}) os.Error {
+    var ok bool;
+    ptr := dest.(*[]string);
+    *ptr, ok = def.([]string);
+    if !ok {
+        return os.NewError(fmt.Sprintf("Expected []string as default value, not '%v'", def));
+    }
+    return nil;
 }
 
 func (sa *StringArrayType) validAction(action *Action, nargs int) bool {
@@ -260,29 +277,38 @@ type IntArrayType struct {
     option;
 }
 
-func (ia *IntArrayType) parseArg(opt string, arg []string) interface{} {
+func (ia *IntArrayType)
+parseArg(arg []string)
+(interface{}, os.Error)
+{
     if len(arg) == 1 {
         i, ok := strconv.Atoi(arg[0]);
         if ok != nil {
-            Error(opt, fmt.Sprintf("'%s' is not an integer", arg[0]));
+            return nil, os.NewError(fmt.Sprintf("'%s' is not an integer", arg[0]));
         }
-        return i;
+        return i, nil;
     } else {
         ret := make([]int, len(arg));
         for i, str := range arg {
             x, ok := strconv.Atoi(str);
             if ok != nil {
-                Error(opt, fmt.Sprintf("'%s' is not an integer", str));
+                return nil, os.NewError(fmt.Sprintf("'%s' is not an integer", str));
             }
-            ret[i] = x
+            ret[i] = x;
         }
-        return ret;
+        return ret, nil;
     }
-    return nil;
+    return nil, os.NewError("IntArrayType.parseArg");
 }
 
-func (s *IntArrayType) storeDefault(dest, def interface{}) {
-    *dest.(*[]int) = def.([]int);
+func (s *IntArrayType) storeDefault(dest, def interface{}) os.Error {
+    var ok bool;
+    ptr := dest.(*[]int);
+    *ptr, ok = def.([]int);
+    if !ok {
+        return os.NewError(fmt.Sprintf("Expected []int as default value, not '%v'", def));
+    }
+    return nil;
 }
 
 func (ia *IntArrayType) validAction(action *Action, nargs int) bool {
@@ -323,12 +349,21 @@ type StringArrayArrayType struct {
     option;
 }
 
-func (sa *StringArrayArrayType) parseArg(opt string, arg []string) interface{} {
-    return arg;
+func (sa *StringArrayArrayType)
+parseArg(arg []string)
+(interface{}, os.Error)
+{
+    return arg, nil;
 }
 
-func (sa *StringArrayArrayType) storeDefault(dest, def interface{}) {
-    *dest.(*[][]string) = def.([][]string);
+func (sa *StringArrayArrayType) storeDefault(dest, def interface{}) os.Error {
+    var ok bool;
+    ptr := dest.(*[][]string);
+    *ptr, ok = def.([][]string);
+    if !ok {
+        return os.NewError(fmt.Sprintf("Expected [][]string as default value, not '%v'", def));
+    }
+    return nil;
 }
 
 func (sa *StringArrayArrayType) validAction(action *Action, nargs int) bool {
@@ -366,17 +401,15 @@ type HelpType struct {
     op *OptionParser;
 }
 
-func (h *HelpType) storeDefault(dest, def interface{}) {
-}
-
 func (h *HelpType) validAction(action *Action, nargs int) bool {
     return action == helpAction;
 }
 
-func (h *HelpType) performAction(optStr string, arg []string) {
+func (h *HelpType) performAction(arg []string) os.Error {
     usage := h.op.Usage();
     fmt.Println(usage);
     os.Exit(0);
+    return nil;
 }
 
 func (op *OptionParser) Help(a...) {

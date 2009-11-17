@@ -25,6 +25,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 package optparse
 
 import "fmt"
+import "os"
 import "reflect"
 import "strings"
 
@@ -40,9 +41,10 @@ type _Const struct { x interface{}; }
 func Const(c interface{}) *_Const { return &_Const{c} }
 
 type Option interface {
+    getName() string;
     getNargs() int;
     hasArgs() bool;
-    performAction(string, []string);
+    performAction([]string) os.Error;
     //setType(Type);
     //setDest(interface{});
     getHelp() string;
@@ -50,8 +52,8 @@ type Option interface {
     String() string;
     matches(string) bool;
 
-    parseArg(opt string, arg []string) interface{};
-    storeDefault(dest, def interface{});
+    parseArg(arg []string) (interface{}, os.Error);
+    storeDefault(dest, def interface{}) os.Error;
     validAction(action *Action, nargs int) bool;
     getOption() *option;
     getDest() interface{};
@@ -59,6 +61,7 @@ type Option interface {
 }
 
 type option struct {
+    typ Option;
     longOpts []string;
     shortOpts []string;
     dest interface{};
@@ -81,6 +84,7 @@ Option
     opts := make([]string, v.NumField());
     max := 0;
     opt := typ.getOption();
+    opt.typ = typ;
     opt.dest = dest;
     for i := 0; i < v.NumField(); i++ {
         field := v.Field(i);
@@ -91,7 +95,12 @@ Option
         case *Action:
             action = f;
             if action == StoreFalse {
-                typ.storeDefault(dest, true);
+                err := typ.storeDefault(dest, true);
+                if err != nil {
+                    typ.setOpts(opts[0:max]);
+                    op.ProgrammerError(typ.getName(), err.String());
+                    return nil;
+                }
             }
         case *_Help:
             opt.help = strings.TrimSpace(f.x);
@@ -100,11 +109,17 @@ Option
         case *_Argdesc:
             opt.argdesc = f.x;
         case *_Default:
-            if false { fmt.Printf("%v\n", *f); }
+            /*
             if !destTypecheck(dest, f.x) {
                 ProgrammerError(fmt.Sprintf("%s: Type mismatch with default value.", opts[0]));
             }
-            typ.storeDefault(dest, f.x);
+            */
+            err := typ.storeDefault(dest, f.x);
+            if err != nil {
+                typ.setOpts(opts[0:max]);
+                op.ProgrammerError(typ.getName(), err.String());
+                return nil;
+            }
         case *_Const:
             opt.const_ = f.x;
         default:
@@ -117,25 +132,26 @@ Option
         }
     }
     opt.action = action;
+    if max == 0 {
+        op.ProgrammerError("<unknown>", "Option has no options!");
+        return nil;
+    }
+    typ.setOpts(opts[0:max]);
+    name := typ.getName();
     if action == helpAction && opt.help == "" {
         opt.help = "Print this help message and exit.";
     }
     if opt.nargs == 0 && typ.hasArgs() {
         opt.nargs = 1;
     }
-    if max == 0 {
-        ProgrammerError("Option has no options!");
-        return nil;
-    }
     if !typ.validAction(action, opt.nargs) {
-        ProgrammerError(fmt.Sprintf("Option '%s' is using invalid action '%s'.", opts[0], action.name));
+        op.ProgrammerError(name, fmt.Sprintf("Option '%s' is using invalid action '%s'.", opts[0], action.name));
         return nil;
     }
     if opt.const_ != nil && !destTypecheck(dest, opt.const_) {
-        ProgrammerError(fmt.Sprintf("%s: Type mismatch with constant value.", opts[0]));
+        op.ProgrammerError(name, fmt.Sprintf("%s: Type mismatch with constant value.", opts[0]));
         return nil;
     }
-    typ.setOpts(opts[0:max]);
     if opt.argdesc == "" && opt.nargs > 0 {
         if len(opt.longOpts) > 0 {
             tmp := opt.longOpts[0];
@@ -157,6 +173,19 @@ Option
     return typ;
 }
 
+func (o *option) getName() string {
+    var ret string;
+    if len(o.longOpts) > 0 {
+        ret = o.longOpts[0];
+    } else {
+        ret = o.shortOpts[0];
+    }
+    if ret == "" {
+        ret = "<unknown>";
+    }
+    return ret;
+}
+
 func (o *option) getOption() *option {
     return o;
 }
@@ -169,17 +198,19 @@ func (o *option) getConst() interface{} {
     return o.const_;
 }
 
-func (o *option) parseArg(opt string, arg []string) interface{} {
-    return nil;
+func (o *option) parseArg(arg []string) (interface{}, os.Error) {
+    return nil, nil;
 }
 
-func (o *option) storeDefault(dest, def interface{}) {}
+func (o *option) storeDefault(dest, def interface{}) os.Error {
+    return os.NewError("This option does not accept a default argument.");
+}
 func (o *option) validAction(action *Action, nargs int) bool {
     return false;
 }
 
-func (o *option) performAction(optStr string, arg []string) {
-    o.action.fn(o, optStr, arg);
+func (o *option) performAction(arg []string) os.Error {
+    return o.action.fn(o.typ, arg);
 }
 
 func (o *option) hasArgs() bool {
