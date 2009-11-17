@@ -90,4 +90,3 @@ func splitWords(s string) []string {
     words = appendString(words, s[start:len(s)]);
     return words;
 }
-

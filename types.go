@@ -334,3 +334,23 @@ func (op *OptionParser) StringArrayArrayVar(dest *[][]string, a...) {
     typ := new(StringArrayArrayType);
     op.createOption(a, dest, typ, Append);
 }
+
+// HelpType
+type HelpType struct {
+}
+
+func (h *HelpType) parseArg(opt string, arg []string) interface{} {
+    return nil;
+}
+
+func (h *HelpType) storeDefault(dest, def interface{}) {
+}
+
+func (h *HelpType) validAction(action *Action, nargs int) bool {
+    return action == helpAction;
+}
+
+func (op *OptionParser) Help(a...) {
+    typ := new(HelpType);
+    op.createOption(a, nil, typ, helpAction);
+}

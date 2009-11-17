@@ -50,7 +50,7 @@ const (
 type Option interface {
     getNargs() int;
     hasArgs() bool;
-    performAction(string, []string);
+    performAction(*OptionParser, string, []string);
     //setType(Type);
     //setDest(interface{});
     getHelp() string;
@@ -97,7 +97,7 @@ Option
                 typ.storeDefault(dest, true);
             }
         case *_Help:
-            opt.help = f.x;
+            opt.help = strings.TrimSpace(f.x);
         case *_Nargs:
             opt.nargs = f.x;
         case *_Argdesc:
@@ -124,6 +124,9 @@ Option
             }
         }
     }
+    if action == helpAction && opt.help == "" {
+        opt.help = "Print this help message and exit.";
+    }
     if opt.nargs == 0 && action.hasArgs {
         opt.nargs = 1;
     }
@@ -141,12 +144,29 @@ Option
     }
     opt.action = action;
     opt.setOpts(opts[0:max]);
+    if opt.argdesc == "" && opt.nargs > 0 {
+        if len(opt.longOpts) > 0 {
+            tmp := opt.longOpts[0];
+            opt.argdesc = tmp[2:len(tmp)];
+        } else {
+            tmp := opt.shortOpts[0];
+            opt.argdesc = tmp[1:len(tmp)];
+        }
+        opt.argdesc = strings.ToUpper(opt.argdesc);
+        // strings.Replace would be nice...
+        opt.argdesc = strings.Map(func(x int)int {
+            if x == '-' {
+                return '_';
+            }
+            return x;
+        }, opt.argdesc);
+    }
     op.appendOpt(opt);
     return opt;
 }
 
-func (o *option) performAction(optStr string, arg []string) {
-    o.action.fn(o, optStr, arg);
+func (o *option) performAction(op *OptionParser, optStr string, arg []string) {
+    o.action.fn(op, o, optStr, arg);
 }
 
 func (o *option) hasArgs() bool {
@@ -154,7 +174,28 @@ func (o *option) hasArgs() bool {
 }
 
 func (o *option) String() string {
-    return strings.Join(o.longOpts, ",") + "," + strings.Join(o.shortOpts, ",")
+    var ret string;
+    if o.nargs == 0 {
+        short := strings.Join(o.shortOpts, ", ");
+        long := strings.Join(o.longOpts, ", ");
+        if short != "" && long != "" {
+            ret = short + ", " + long;
+        } else if short != "" {
+            ret = short;
+        } else {
+            ret = long;
+        }
+    } else {
+        parts := make([]string, len(o.shortOpts) + len(o.longOpts));
+        for i, opt := range o.shortOpts {
+            parts[i] = opt + " " + o.argdesc;
+        }
+        for i, opt := range o.longOpts {
+            parts[i + len(o.shortOpts)] = opt + " " + o.argdesc;
+        }
+        ret = strings.Join(parts, ", ");
+    }
+    return ret;
 }
 
 func (o *option) setOpts(opts []string) {

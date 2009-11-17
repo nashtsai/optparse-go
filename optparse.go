@@ -30,11 +30,13 @@ import "strings"
 
 type OptionParser struct {
     options []Option;
+    _usage string;
 }
 
-func Parser() *OptionParser {
+func Parser(usage string) *OptionParser {
     ret := new(OptionParser);
     ret.options = make([]Option, 0, 10);
+    ret._usage = usage;
     return ret;
 }
 
@@ -66,10 +68,6 @@ func Error(opt, msg string) {
 func ProgrammerError(msg string) {
     fmt.Fprintf(os.Stderr, "Programmer error: %s\n", msg);
     os.Exit(2);
-}
-
-func (op *OptionParser) Usage() string {
-    return "";
 }
 
 func (op *OptionParser) Parse() []string {
@@ -110,7 +108,7 @@ doAction(opt, arg string, hasArg bool, args []string, i int)
     } else {
         current = nil;
     }
-    option.performAction(opt, current);
+    option.performAction(op, opt, current);
     return i, usedArg
 }
 
