@@ -15,13 +15,13 @@ var bar = p.StringArray("--bar", "-b", op.Default([]string{"one","two"}))
 var c = p.Int("--count", "-c", op.Count)
 var baz = p.StringArray("--baz", op.Store, op.Nargs(3), op.Metavar("A B C"))
 var list = p.StringArrayArray("--list", op.Nargs(3), op.Metavar("X Y Z"))
+var _ = p.Callback("--callback", func() { fmt.Println("Callback"); })
+var _ = p.Callback("--callback-arg", "-a", func(i int, s string) {
+    fmt.Printf("Callback: %d %s\n", i, s);
+}, op.Help(s))
+var _ = p.Help("-h", "--help")
 
 func main() {
-    p.Callback("--callback", func() { fmt.Println("Callback"); });
-    p.Callback("--callback-arg", "-a", func(i int, s string) {
-        fmt.Printf("Callback: %d %s\n", i, s);
-    }, op.Help(s));
-    p.Help("-h", "--help");
     args, _ := p.Parse();
     fmt.Printf("--flag=%t\n", *flag);
     fmt.Printf("--invert=%t\n", *invert);

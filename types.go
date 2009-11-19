@@ -202,9 +202,10 @@ func (cb *CallbackType) performAction(arg []string) os.Error {
     return nil;
 }
 
-func (op *OptionParser) Callback(a...) {
+func (op *OptionParser) Callback(a...) interface{} {
     typ := new(CallbackType);
     op.createOption(a, nil, typ, nil);
+    return nil;
 }
 
 // array
@@ -412,8 +413,9 @@ func (h *HelpType) performAction(arg []string) os.Error {
     return nil;
 }
 
-func (op *OptionParser) Help(a...) {
+func (op *OptionParser) Help(a...) interface{} {
     typ := new(HelpType);
     typ.op = op;
     op.createOption(a, nil, typ, helpAction);
+    return nil;
 }
