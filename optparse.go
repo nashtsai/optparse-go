@@ -89,18 +89,18 @@ func (op *OptionParser) Parse() ([]string, os.Error) {
 }
 
 func (op *OptionParser)
-doAction(opt, arg string, hasArg bool, args []string, i int, pos *[]string)
-(int, bool, os.Error)
+doAction(opt, arg string, hasArg bool, args []string, i *int, pos *[]string)
+(bool, os.Error)
 {
     var current []string;
     usedArg := false;
     option := op.matches(opt);
     if option == nil {
         if op.flags & KEEP_UNKNOWN_OPTIONS != 0 {
-            appendString(pos, args[i]);
-            return i, hasArg, nil;
+            appendString(pos, args[*i]);
+            return hasArg, nil;
         } else {
-            return i, false, os.NewError("invalid option");
+            return false, os.NewError("invalid option");
         }
     }
     nargs := option.getNargs();
@@ -113,20 +113,20 @@ doAction(opt, arg string, hasArg bool, args []string, i int, pos *[]string)
             usedArg = true;
         }
         for ; j < len(current); j++{
-            i++;
-            if i >= len(args) {
-                return i, false, os.NewError("insufficient arguments for option");
+            (*i)++;
+            if *i >= len(args) {
+                return false, os.NewError("insufficient arguments for option");
             }
-            current[j] = args[i];
+            current[j] = args[*i];
         }
     } else {
         current = nil;
     }
     err := option.performAction(current);
     if err != nil {
-        return i, false, err;
+        return false, err;
     }
-    return i, usedArg, nil;
+    return usedArg, nil;
 }
 
 func (op *OptionParser) ParseArgs(args []string) ([]string, os.Error) {
@@ -150,7 +150,7 @@ func (op *OptionParser) ParseArgs(args []string) ([]string, os.Error) {
             } else {
                 hasArg = false;
             }
-            i, _, err = op.doAction(opt, arg, hasArg, args, i, &positional_args);
+            _, err = op.doAction(opt, arg, hasArg, args, &i, &positional_args);
             if err != nil {
                 err = op.optError(opt, err.String());
                 if op.flags & EXIT_ON_ERROR != 0 {
@@ -168,7 +168,7 @@ func (op *OptionParser) ParseArgs(args []string) ([]string, os.Error) {
                     hasArg = true;
                 }
                 var usedArg bool;
-                i, usedArg, err = op.doAction(s, arg, hasArg, args, i, &positional_args);
+                usedArg, err = op.doAction(s, arg, hasArg, args, &i, &positional_args);
                 if err != nil {
                     err = op.optError(opt, err.String());
                     if op.flags & EXIT_ON_ERROR != 0 {
