@@ -20,9 +20,9 @@ var _ = p.Callback("--callback-arg", "-a", func(i int, s string) {
     fmt.Printf("Callback: %d %s\n", i, s);
 }, op.Help(s))
 var _ = p.Help("-h", "--help")
+var args, _ = p.Parse()
 
 func main() {
-    args, _ := p.Parse();
     fmt.Printf("--flag=%t\n", *flag);
     fmt.Printf("--invert=%t\n", *invert);
     fmt.Printf("--foo=%s\n", *foo);
