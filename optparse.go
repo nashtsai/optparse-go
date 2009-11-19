@@ -48,7 +48,6 @@ func NewParser(usage string, flags uint32) *OptionParser {
     return ret;
 }
 
-//var options = make([]Option, 0, 10)
 func (op *OptionParser) appendOpt(opt Option) {
     op.options = op.options[0:len(op.options)+1];
     op.options[len(op.options)-1] = opt;
@@ -76,8 +75,6 @@ func (op *OptionParser) printAndExit(err os.Error) {
 
 func (op *OptionParser) optError(opt, msg string) os.Error {
     return os.NewError(fmt.Sprintf("%s: %s", opt, msg));
-    //fmt.Fprintf(os.Stderr, "Error: %s: %s\n%s\n", opt, msg, op.Usage());
-    //os.Exit(1);
 }
 func (op *OptionParser) ProgrammerError(opt, msg string) {
     fmt.Fprintf(os.Stderr, "Programmer error: %s: %s\n", opt, msg);

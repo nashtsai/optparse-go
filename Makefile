@@ -2,8 +2,8 @@ include $(GOROOT)/src/Make.$(GOARCH)
 
 OPTFILES=optparse.go actions.go option.go types.go util.go help.go
 
-optparse: clean optparse.$(O)
-test: clean test.$(O)
+optparse: optparse.$(O)
+test: test.$(O)
 	$(LD) -o test test.$(O)
 optparse.$(O): $(OPTFILES)
 	$(GC) -o optparse.$(O) $(OPTFILES)
