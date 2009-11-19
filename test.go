@@ -6,7 +6,7 @@ import "strings"
 import op "optparse";
 
 var s = "This is some sample text. Watermelon. This is some sample text. Watermelon. This is some sample text.\n Watermelon.     This is some sample text. Watermelon. This is some sample text. Watermelon.";
-var p = op.Parser("[options] args...")
+var p = op.NewParser("[options] args...", op.EXIT_ON_ERROR | op.KEEP_UNKNOWN_OPTIONS)
 var flag = p.Bool("--flag", "-t", op.Help(s))
 var invert = p.Bool("--invert", "-T", op.StoreFalse)
 var foo = p.String("--foo", "-f", op.Default("default"))
@@ -22,7 +22,7 @@ func main() {
         fmt.Printf("Callback: %d %s\n", i, s);
     }, op.Help(s));
     p.Help("-h", "--help");
-    args := p.Parse();
+    args, _ := p.Parse();
     fmt.Printf("--flag=%t\n", *flag);
     fmt.Printf("--invert=%t\n", *invert);
     fmt.Printf("--foo=%s\n", *foo);

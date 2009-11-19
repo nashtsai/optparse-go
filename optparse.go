@@ -31,12 +31,20 @@ import "strings"
 type OptionParser struct {
     options []Option;
     usage string;
+    flags uint32;
 }
 
-func Parser(usage string) *OptionParser {
+const (
+    NONE = 0;
+    EXIT_ON_ERROR = 1 << iota;
+    KEEP_UNKNOWN_OPTIONS;
+)
+
+func NewParser(usage string, flags uint32) *OptionParser {
     ret := new(OptionParser);
     ret.options = make([]Option, 0, 10);
     ret.usage = usage;
+    ret.flags = flags;
     return ret;
 }
 
@@ -61,33 +69,39 @@ func (op *OptionParser) matches(s string) Option {
     return nil;
 }
 
-func (op *OptionParser) Error(opt, msg string) {
-    fmt.Fprintf(os.Stderr, "Error: %s: %s\n%s\n", opt, msg, op.Usage());
+func (op *OptionParser) printAndExit(err os.Error) {
+    fmt.Fprintf(os.Stderr, "Error: %s\n%s\n", err, op.Usage());
     os.Exit(1);
+}
+
+func (op *OptionParser) optError(opt, msg string) os.Error {
+    return os.NewError(fmt.Sprintf("%s: %s", opt, msg));
+    //fmt.Fprintf(os.Stderr, "Error: %s: %s\n%s\n", opt, msg, op.Usage());
+    //os.Exit(1);
 }
 func (op *OptionParser) ProgrammerError(opt, msg string) {
     fmt.Fprintf(os.Stderr, "Programmer error: %s: %s\n", opt, msg);
     os.Exit(2);
 }
 
-func (op *OptionParser) Parse() []string {
+func (op *OptionParser) Parse() ([]string, os.Error) {
     return op.ParseArgs(os.Args[1:len(os.Args)]);
 }
 
-func (op *OptionParser) invalid(arg string) {
-    op.Error(arg, "invalid option");
-}
-
 func (op *OptionParser)
-doAction(opt, arg string, hasArg bool, args []string, i int)
-(int, bool)
+doAction(opt, arg string, hasArg bool, args []string, i int, pos *[]string)
+(int, bool, os.Error)
 {
     var current []string;
     usedArg := false;
     option := op.matches(opt);
     if option == nil {
-        op.invalid(opt);
-        return i, false
+        if op.flags & KEEP_UNKNOWN_OPTIONS != 0 {
+            appendString(pos, args[i]);
+            return i, hasArg, nil;
+        } else {
+            return i, false, os.NewError("invalid option");
+        }
     }
     nargs := option.getNargs();
     if nargs > 0 {
@@ -101,7 +115,7 @@ doAction(opt, arg string, hasArg bool, args []string, i int)
         for ; j < len(current); j++{
             i++;
             if i >= len(args) {
-                op.Error(opt, "insufficient arguments for option");
+                return i, false, os.NewError("insufficient arguments for option");
             }
             current[j] = args[i];
         }
@@ -110,21 +124,22 @@ doAction(opt, arg string, hasArg bool, args []string, i int)
     }
     err := option.performAction(current);
     if err != nil {
-        op.Error(opt, err.String());
+        return i, false, err;
     }
-    return i, usedArg
+    return i, usedArg, nil;
 }
 
-func (op *OptionParser) ParseArgs(args []string) []string {
+func (op *OptionParser) ParseArgs(args []string) ([]string, os.Error) {
     positional_args := make([]string, 0, len(args));
     var arg string;
     var hasArg bool;
+    var err os.Error;
     for i := 0; i < len(args); i++ {
         opt := args[i];
         if opt == "--" {
             i++;
             for ; i < len(args); i++ {
-                positional_args = appendString(positional_args, args[i])
+                appendString(&positional_args, args[i])
             }
         } else if strings.HasPrefix(opt, "--") {
             idx := strings.Index(opt, "=");
@@ -135,7 +150,14 @@ func (op *OptionParser) ParseArgs(args []string) []string {
             } else {
                 hasArg = false;
             }
-            i, _ = op.doAction(opt, arg, hasArg, args, i);
+            i, _, err = op.doAction(opt, arg, hasArg, args, i, &positional_args);
+            if err != nil {
+                err = op.optError(opt, err.String());
+                if op.flags & EXIT_ON_ERROR != 0 {
+                    op.printAndExit(err);
+                }
+                return nil, err;
+            }
         } else if strings.HasPrefix(opt, "-") {
             for j, c := range opt[1:len(opt)] {
                 s := "-" + string(c);
@@ -146,14 +168,21 @@ func (op *OptionParser) ParseArgs(args []string) []string {
                     hasArg = true;
                 }
                 var usedArg bool;
-                i, usedArg = op.doAction(s, arg, hasArg, args, i);
+                i, usedArg, err = op.doAction(s, arg, hasArg, args, i, &positional_args);
+                if err != nil {
+                    err = op.optError(opt, err.String());
+                    if op.flags & EXIT_ON_ERROR != 0 {
+                        op.printAndExit(err);
+                    }
+                    return nil, err;
+                }
                 if usedArg {
                     break;
                 }
             }
         } else {
-            positional_args = appendString(positional_args, opt)
+            appendString(&positional_args, opt)
         }
     }
-    return positional_args;
+    return positional_args, nil;
 }

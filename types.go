@@ -257,7 +257,7 @@ func (sa *StringArrayType) validAction(action *Action, nargs int) bool {
 
 func (sa *StringArrayType) append(dest interface{}, val interface{}) {
     a := dest.(*[]string);
-    *a = appendString(*a, val.(string));
+    appendString(a, val.(string));
 }
 
 func (op *OptionParser) StringArray(a...) *[]string {
@@ -329,7 +329,7 @@ func (ia *IntArrayType) validAction(action *Action, nargs int) bool {
 
 func (ia *IntArrayType) append(dest interface{}, val interface{}) {
     i := dest.(*[]int);
-    *i = appendInt(*i, val.(int));
+    appendInt(i, val.(int));
 }
 
 func (op *OptionParser) IntArray(a...) *[]int {
@@ -380,7 +380,7 @@ func (sa *StringArrayArrayType) validAction(action *Action, nargs int) bool {
 
 func (sa *StringArrayArrayType) append(dest, val interface{}) {
     a := dest.(*[][]string);
-    *a = appendStringArray(*a, val.([]string));
+    appendStringArray(a, val.([]string));
 }
 
 func (op *OptionParser) StringArrayArray(a...) *[][]string {

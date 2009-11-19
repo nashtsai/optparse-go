@@ -39,14 +39,14 @@ func linewrap(s string, width int) []string {
     for i, word := range words {
         wordLen := utf8.RuneCountInString(word);
         if length + wordLen + 1 > width {
-            lines = appendString(lines, strings.Join(words[start:i], " "));
+            appendString(&lines, strings.Join(words[start:i], " "));
             start = i;
             length = wordLen;
         } else {
             length += wordLen + 1;
         }
     }
-    lines = appendString(lines, strings.Join(words[start:len(words)], " "));
+    appendString(&lines, strings.Join(words[start:len(words)], " "));
     return lines;
 }
 
@@ -82,22 +82,22 @@ func (op *OptionParser) Usage() string {
     for i, opt := range op.options {
         help := linewrap(opt.getHelp(), width);
         if optLong[i] {
-            lines = appendString(lines, "  " + optStrs[i]);
+            appendString(&lines, "  " + optStrs[i]);
             if opt.getHelp() == "" {
                 continue;
             }
             for _, line := range help {
-                lines = appendString(lines, fmt.Sprintf(format, "", line));
+                appendString(&lines, fmt.Sprintf(format, "", line));
             }
         } else {
             if opt.getHelp() == "" {
-                lines = appendString(lines, "  " + optStrs[i]);
+                appendString(&lines, "  " + optStrs[i]);
                 continue;
             }
             firstLine := fmt.Sprintf(format, optStrs[i], help[0]);
-            lines = appendString(lines, firstLine);
+            appendString(&lines, firstLine);
             for _, line := range help[1:len(help)] {
-                lines = appendString(lines, fmt.Sprintf(format, "", line));
+                appendString(&lines, fmt.Sprintf(format, "", line));
             }
         }
     }

@@ -27,43 +27,42 @@ package optparse
 import "strings"
 import "unicode"
 
-func appendString(arr []string, s string) []string {
-    if len(arr) == cap(arr) {
-        tmp := make([]string, len(arr), cap(arr) * 2);
-        for i, e := range arr {
+func appendString(arr *[]string, s string) {
+    if len(*arr) == cap(*arr) {
+        tmp := make([]string, len(*arr), cap(*arr) * 2);
+        for i, e := range *arr {
             tmp[i] = e;
         }
-        arr = tmp;
+        *arr = tmp;
     }
-    arr = arr[0:len(arr)+1];
-    arr[len(arr)-1] = s;
-    return arr
+    *arr = (*arr)[0:len(*arr)+1];
+    (*arr)[len(*arr)-1] = s;
 }
 
-func appendInt(arr []int, x int) []int {
-    if len(arr) == cap(arr) {
-        tmp := make([]int, len(arr), cap(arr) * 2);
-        for i, e := range arr {
+func appendInt(arr *[]int, x int) []int {
+    if len(*arr) == cap(*arr) {
+        tmp := make([]int, len(*arr), cap(*arr) * 2);
+        for i, e := range *arr {
             tmp[i] = e;
         }
-        arr = tmp;
+        *arr = tmp;
     }
-    arr = arr[0:len(arr)+1];
-    arr[len(arr)-1] = x;
-    return arr
+    *arr = (*arr)[0:len(*arr)+1];
+    (*arr)[len(*arr)-1] = x;
+    return *arr
 }
 
-func appendStringArray(arr [][]string, a []string) [][]string {
-    if len(arr) == cap(arr) {
-        tmp := make([][]string, len(arr), cap(arr) * 2);
-        for i, e := range arr {
+func appendStringArray(arr *[][]string, a []string) [][]string {
+    if len(*arr) == cap(*arr) {
+        tmp := make([][]string, len(*arr), cap(*arr) * 2);
+        for i, e := range *arr {
             tmp[i] = e;
         }
-        arr = tmp;
+        *arr = tmp;
     }
-    arr = arr[0:len(arr)+1];
-    arr[len(arr)-1] = a;
-    return arr;
+    *arr = (*arr)[0:len(*arr)+1];
+    (*arr)[len(*arr)-1] = a;
+    return *arr;
 }
 
 func splitWords(s string) []string {
@@ -77,7 +76,7 @@ func splitWords(s string) []string {
     for end, rune := range s {
         if unicode.IsSpace(rune) {
             if !inWhitespace {
-                words = appendString(words, s[start:end]);
+                appendString(&words, s[start:end]);
             }
             inWhitespace = true;
         } else {
@@ -87,6 +86,6 @@ func splitWords(s string) []string {
             inWhitespace = false;
         }
     }
-    words = appendString(words, s[start:len(s)]);
+    appendString(&words, s[start:len(s)]);
     return words;
 }
