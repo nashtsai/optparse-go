@@ -89,7 +89,7 @@ func (s *StringType) validAction(action *Action, nargs int) bool {
     switch action {
     case StoreConst:
         return true;
-    case Store, Append:
+    case Store:
         if nargs == 1 {
             return true;
         }
@@ -143,7 +143,7 @@ func (it *IntType) validAction(action *Action, nargs int) bool {
     switch action {
     case StoreConst, Count:
         return true;
-    case Store, Append:
+    case Store:
         if nargs == 1 {
             return true;
         }

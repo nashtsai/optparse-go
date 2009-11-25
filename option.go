@@ -122,6 +122,7 @@ Option
             }
         case *_Const:
             opt.const_ = f.x;
+            action = StoreConst;
         default:
             fn, ok := field.(*reflect.FuncValue);
             if ok {
