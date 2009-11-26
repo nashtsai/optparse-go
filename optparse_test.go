@@ -21,6 +21,32 @@ func checkArgs(t *testing.T, args []string, err os.Error) {
     }
 }
 
+func TestParser(t *testing.T) {
+    p := op.NewParser("", 0);
+    a := p.Int("--aaa", "-a");
+    b := p.Int("--bbb", "-b", op.Count);
+    args, err := p.ParseArgs([]string{"--aaa=1"});
+    checkArgs(t, args, err);
+    assertEqual(t, *a, 1, "Failed to parse --opt=arg");
+    *a = 0;
+    args, err = p.ParseArgs([]string{"--aaa", "1"});
+    checkArgs(t, args, err);
+    assertEqual(t, *a, 1, "Failed to parse --opt arg");
+    *a = 0;
+    args, err = p.ParseArgs([]string{"-a1"});
+    checkArgs(t, args, err);
+    assertEqual(t, *a, 1, "Failed to parse -oarg");
+    *a = 0;
+    args, err = p.ParseArgs([]string{"-a", "1"});
+    checkArgs(t, args, err);
+    assertEqual(t, *a, 1, "Failed to parse -o arg");
+    *a = 0;
+    args, err = p.ParseArgs([]string{"-bbba1"});
+    checkArgs(t, args, err);
+    assertEqual(t, *a, 1, "Failed to parse -pppoarg");
+    assertEqual(t, *b, 3, "Failed to parse -ooo");
+}
+
 func TestBool(t *testing.T) {
     p := op.NewParser("", 0);
     a := p.Bool("-a");
@@ -72,4 +98,28 @@ func TestCallback(t *testing.T) {
     checkArgs(t, args, err);
     assertEqual(t, a, 1, "Callback did not fire");
     assertEqual(t, b, 1, "Callback with argument did not fire");
+}
+
+func TestStringArray(t *testing.T) {
+    p := op.NewParser("", 0);
+    a := p.StringArray("-a");
+    assertEqual(t, *a, []string{}, "StringArray did not default to empty array");
+    b := p.StringArray("-b", op.Nargs(3), op.Store);
+    assertEqual(t, *b, []string{}, "StringArray with Nargs did not default to empty array");
+    args, err := p.ParseArgs([]string{"-a", "one", "-a", "two", "-b", "foo", "bar", "baz"});
+    checkArgs(t, args, err);
+    assertEqual(t, *a, []string{"one", "two"}, "StringArray did not append successfully");
+    assertEqual(t, *b, []string{"foo", "bar", "baz"}, "StringArray did not parse Nargs(3) successfully");
+}
+
+func TestIntArray(t *testing.T) {
+    p := op.NewParser("", 0);
+    a := p.IntArray("-a");
+    assertEqual(t, *a, []int{}, "IntArray did not default to empty array");
+    b := p.IntArray("-b", op.Nargs(3), op.Store);
+    assertEqual(t, *b, []int{}, "IntArray with Nargs did not default to empty array");
+    args, err := p.ParseArgs([]string{"-a", "1", "-a", "2", "-b", "5", "6", "7"});
+    checkArgs(t, args, err);
+    assertEqual(t, *a, []int{1, 2}, "IntArray did not append successfully");
+    assertEqual(t, *b, []int{5, 6, 7}, "IntArray did not parse Nargs(3) successfully");
 }
