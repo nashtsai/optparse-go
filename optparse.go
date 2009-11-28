@@ -30,6 +30,7 @@ import "strings"
 
 type OptionParser struct {
     options []Option;
+    optStrings map[string]Option;
     usage string;
     flags uint32;
 }
@@ -43,6 +44,7 @@ const (
 func NewParser(usage string, flags uint32) *OptionParser {
     ret := new(OptionParser);
     ret.options = make([]Option, 0, 10);
+    ret.optStrings = make(map[string]Option);
     ret.usage = usage;
     ret.flags = flags;
     return ret;
@@ -86,12 +88,11 @@ func (op *OptionParser) Parse() ([]string, os.Error) {
 }
 
 func (op *OptionParser)
-doAction(opt, arg string, hasArg bool, args []string, i *int, pos *[]string)
+doAction(option Option, arg string, hasArg bool, args []string, i *int, pos *[]string)
 (bool, os.Error)
 {
     var current []string;
     usedArg := false;
-    option := op.matches(opt);
     if option == nil {
         if op.flags & KEEP_UNKNOWN_OPTIONS != 0 {
             appendString(pos, args[*i]);
@@ -131,15 +132,19 @@ func (op *OptionParser) ParseArgs(args []string) ([]string, os.Error) {
     var arg string;
     var hasArg bool;
     var err os.Error;
+    var opt string;
+    var option Option;
     for i := 0; i < len(args); i++ {
-        opt := args[i];
+        opt = args[i];
+        idx := strings.Index(opt, "=");
         if opt == "--" {
             i++;
             for ; i < len(args); i++ {
                 appendString(&positional_args, args[i])
             }
-        } else if strings.HasPrefix(opt, "--") {
-            idx := strings.Index(opt, "=");
+        } else if strings.HasPrefix(opt, "--") ||
+            strings.HasPrefix(opt, "-") && idx != -1
+        {
             if idx != -1 {
                 arg = opt[idx + 1:len(opt)];
                 hasArg = true;
@@ -147,15 +152,25 @@ func (op *OptionParser) ParseArgs(args []string) ([]string, os.Error) {
             } else {
                 hasArg = false;
             }
-            _, err = op.doAction(opt, arg, hasArg, args, &i, &positional_args);
+            option = op.matches(opt);
+            if option == nil && !strings.HasPrefix(opt, "--") {
+                // for weird cases like -fFOO=BAR
+                opt = args[i];
+                goto parse_short_opt;
+            }
+            _, err = op.doAction(option, arg, hasArg, args, &i, &positional_args);
             if err != nil {
-                err = op.optError(opt, err.String());
-                if op.flags & EXIT_ON_ERROR != 0 {
-                    op.printAndExit(err);
-                }
-                return nil, err;
+                goto error;
             }
         } else if strings.HasPrefix(opt, "-") {
+            parse_short_opt:
+            if option = op.matches(opt); option != nil && idx == -1{
+                _, err = op.doAction(option, "", false, args, &i, &positional_args);
+                if err != nil {
+                    goto error;
+                }
+                continue;
+            }
             for j, c := range opt[1:len(opt)] {
                 s := "-" + string(c);
                 if j == len(opt) - 2 {
@@ -165,13 +180,10 @@ func (op *OptionParser) ParseArgs(args []string) ([]string, os.Error) {
                     hasArg = true;
                 }
                 var usedArg bool;
-                usedArg, err = op.doAction(s, arg, hasArg, args, &i, &positional_args);
+                option = op.matches(s);
+                usedArg, err = op.doAction(option, arg, hasArg, args, &i, &positional_args);
                 if err != nil {
-                    err = op.optError(opt, err.String());
-                    if op.flags & EXIT_ON_ERROR != 0 {
-                        op.printAndExit(err);
-                    }
-                    return nil, err;
+                    goto error;
                 }
                 if usedArg {
                     break;
@@ -182,4 +194,11 @@ func (op *OptionParser) ParseArgs(args []string) ([]string, os.Error) {
         }
     }
     return positional_args, nil;
+
+    error:
+    err = op.optError(opt, err.String());
+    if op.flags & EXIT_ON_ERROR != 0 {
+        op.printAndExit(err);
+    }
+    return nil, err;
 }

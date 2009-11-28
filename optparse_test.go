@@ -47,8 +47,9 @@ func checkArgs(t *testing.T, args []string, err os.Error) {
 
 func TestParser(t *testing.T) {
     p := op.NewParser("", 0);
-    a := p.Int("--aaa", "-a");
+    a := p.Int("--aaa", "-aa", "-a");
     b := p.Int("--bbb", "-b", op.Count);
+    c := p.String("--ccc", "-cc", "-c");
     args, err := p.ParseArgs([]string{"--aaa=1"});
     checkArgs(t, args, err);
     assertEqual(t, *a, 1, "Failed to parse --opt=arg");
@@ -56,6 +57,14 @@ func TestParser(t *testing.T) {
     args, err = p.ParseArgs([]string{"--aaa", "1"});
     checkArgs(t, args, err);
     assertEqual(t, *a, 1, "Failed to parse --opt arg");
+    *a = 0;
+    args, err = p.ParseArgs([]string{"-aa", "1"});
+    checkArgs(t, args, err);
+    assertEqual(t, *a, 1, "Failed to parse -opt arg");
+    *a = 0;
+    args, err = p.ParseArgs([]string{"-aa=1"});
+    checkArgs(t, args, err);
+    assertEqual(t, *a, 1, "Failed to parse -opt=arg");
     *a = 0;
     args, err = p.ParseArgs([]string{"-a1"});
     checkArgs(t, args, err);
@@ -69,6 +78,9 @@ func TestParser(t *testing.T) {
     checkArgs(t, args, err);
     assertEqual(t, *a, 1, "Failed to parse -pppoarg");
     assertEqual(t, *b, 3, "Failed to parse -ooo");
+    args, err = p.ParseArgs([]string{"-cFOO=BAR"});
+    checkArgs(t, args, err);
+    assertEqual(t, *c, "FOO=BAR", "Failed to parse -oFOO=BAR");
 }
 
 func TestBool(t *testing.T) {

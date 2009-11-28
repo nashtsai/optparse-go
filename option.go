@@ -45,10 +45,8 @@ type Option interface {
     getNargs() int;
     hasArgs() bool;
     performAction([]string) os.Error;
-    //setType(Type);
-    //setDest(interface{});
     getHelp() string;
-    setOpts([]string);
+    setOpts([]string) os.Error;
     String() string;
     matches(string) bool;
 
@@ -137,7 +135,11 @@ Option
         op.ProgrammerError("<unknown>", "Option has no options!");
         return nil;
     }
-    typ.setOpts(opts[0:max]);
+    err := typ.setOpts(opts[0:max]);
+    if err != nil {
+        op.ProgrammerError("<unknown>", err.String());
+        return nil;
+    }
     name := typ.getName();
     if action == helpAction && opt.help == "" {
         opt.help = "Print this help message and exit.";
@@ -156,7 +158,11 @@ Option
     if opt.argdesc == "" && opt.nargs > 0 {
         if len(opt.longOpts) > 0 {
             tmp := opt.longOpts[0];
-            opt.argdesc = tmp[2:len(tmp)];
+            if strings.HasPrefix(tmp, "--") {
+                opt.argdesc = tmp[2:len(tmp)];
+            } else {
+                opt.argdesc = tmp[1:len(tmp)];
+            }
         } else {
             tmp := opt.shortOpts[0];
             opt.argdesc = tmp[1:len(tmp)];
@@ -243,21 +249,30 @@ func (o *option) String() string {
     return ret;
 }
 
-func (o *option) setOpts(opts []string) {
+func (o *option) setOpts(opts []string) os.Error {
     i := len(opts);
     longOpts := make([]string, 0, i);
     shortOpts := make([]string, 0, i);
     for _, opt := range opts {
+        j := len(strings.Split(opt, "", 0));
         if strings.HasPrefix(opt, "--") {
             longOpts = longOpts[0:len(longOpts) + 1];
             longOpts[len(longOpts) - 1] = opt;
         } else if strings.HasPrefix(opt, "-") {
-            shortOpts = shortOpts[0:len(shortOpts) + 1];
-            shortOpts[len(shortOpts) - 1] = opt;
+            if j == 2 {
+                shortOpts = shortOpts[0:len(shortOpts) + 1];
+                shortOpts[len(shortOpts) - 1] = opt;
+            } else {
+                longOpts = longOpts[0:len(longOpts) + 1];
+                longOpts[len(longOpts) - 1] = opt;
+            }
+        } else {
+            return os.NewError(fmt.Sprintf("'%s' is not a valid option", opt));
         }
     }
     o.longOpts = longOpts;
     o.shortOpts = shortOpts;
+    return nil;
 }
 
 func (o *option) getNargs() int {
@@ -269,12 +284,11 @@ func (o *option) getHelp() string {
 }
 
 func (o *option) matches(opt string) bool {
-    if len(opt) < 2 ||
-       len(opt) == 2 && (opt[0] != '-' || opt[1] == '-') ||
-       len(opt) > 2 && opt[0:2] != "--" {
+    j := len(strings.Split(opt, "", 0));
+    if j < 2 || opt[0] != '-' {
         return false;
     }
-    if len(opt) == 2 {
+    if j == 2 {
         for _, s := range o.shortOpts {
             if s == opt {
                 return true;
