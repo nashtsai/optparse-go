@@ -28,6 +28,7 @@ import "fmt"
 import "os"
 import "reflect"
 import "strings"
+import "utf8"
 
 type _Help struct { x string; }
 func Help(h string) *_Help { return &_Help{h} }
@@ -254,7 +255,7 @@ func (o *option) setOpts(opts []string) os.Error {
     longOpts := make([]string, 0, i);
     shortOpts := make([]string, 0, i);
     for _, opt := range opts {
-        j := len(strings.Split(opt, "", 0));
+        j := utf8.RuneCountInString(opt);
         if strings.HasPrefix(opt, "--") {
             longOpts = longOpts[0:len(longOpts) + 1];
             longOpts[len(longOpts) - 1] = opt;
@@ -284,7 +285,7 @@ func (o *option) getHelp() string {
 }
 
 func (o *option) matches(opt string) bool {
-    j := len(strings.Split(opt, "", 0));
+    j := utf8.RuneCountInString(opt);
     if j < 2 || opt[0] != '-' {
         return false;
     }
