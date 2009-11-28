@@ -256,10 +256,7 @@ func (o *option) setOpts(opts []string) os.Error {
     shortOpts := make([]string, 0, i);
     for _, opt := range opts {
         j := utf8.RuneCountInString(opt);
-        if strings.HasPrefix(opt, "--") {
-            longOpts = longOpts[0:len(longOpts) + 1];
-            longOpts[len(longOpts) - 1] = opt;
-        } else if strings.HasPrefix(opt, "-") {
+        if strings.HasPrefix(opt, "-") {
             if j == 2 {
                 shortOpts = shortOpts[0:len(shortOpts) + 1];
                 shortOpts[len(shortOpts) - 1] = opt;
