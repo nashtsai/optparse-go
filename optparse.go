@@ -87,10 +87,7 @@ func (op *OptionParser) Parse() ([]string, os.Error) {
     return op.ParseArgs(os.Args[1:len(os.Args)]);
 }
 
-func (op *OptionParser)
-doAction(option Option, arg string, hasArg bool, args []string, i *int, pos *[]string)
-(bool, os.Error)
-{
+func (op *OptionParser) doAction(option Option, arg string, hasArg bool, args []string, i *int, pos *[]string) (bool, os.Error) {
     var current []string;
     usedArg := false;
     if option == nil {
@@ -142,9 +139,7 @@ func (op *OptionParser) ParseArgs(args []string) ([]string, os.Error) {
             for ; i < len(args); i++ {
                 appendString(&positional_args, args[i])
             }
-        } else if strings.HasPrefix(opt, "--") ||
-            strings.HasPrefix(opt, "-") && idx != -1
-        {
+        } else if strings.HasPrefix(opt, "--") || strings.HasPrefix(opt, "-") && idx != -1 {
             if idx != -1 {
                 arg = opt[idx + 1:len(opt)];
                 hasArg = true;

@@ -95,7 +95,7 @@ func (op *OptionParser) Usage() string {
     lines := []string {
         fmt.Sprintf("Usage: %s %s", binName, op.usage),
         "",
-        "Options:"
+        "Options:",
     };
     max := 0;
     for i, opt := range op.options {

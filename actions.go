@@ -42,7 +42,7 @@ var StoreConst = &Action{
         elem.SetValue(val);
         return nil;
     },
-    hasArgs: false
+    hasArgs: false,
 }
 
 // StoreTrue
@@ -52,7 +52,7 @@ var StoreTrue = &Action{
         *c.getDest().(*bool) = true;
         return nil;
     },
-    hasArgs: false
+   hasArgs: false,
 }
 
 // StoreFalse
@@ -62,7 +62,7 @@ var StoreFalse = &Action{
         *c.getDest().(*bool) = false;
         return nil;
     },
-    hasArgs: false
+    hasArgs: false,
 }
 
 // Count
@@ -72,7 +72,7 @@ var Count = &Action{
         c.(incrementable).increment(c.getDest());
         return nil;
     },
-    hasArgs: false
+    hasArgs: false,
 }
 
 // Store
@@ -87,7 +87,7 @@ var Store = &Action{
         reflect.NewValue(s.getDest()).(*reflect.PtrValue).Elem().SetValue(val);
         return nil;
     },
-    hasArgs: true
+    hasArgs: true,
 }
 
 // Append
@@ -101,18 +101,18 @@ var Append = &Action{
         a.(array).append(a.getDest(), val);
         return nil;
     },
-    hasArgs: true
+    hasArgs: true,
 }
 
 var callbackAction = &Action{
     name: "callbackAction",
     fn: nil,
     // this is ignored
-    hasArgs: true
+    hasArgs: true,
 }
 
 var helpAction = &Action{
     name: "helpAction",
     fn: nil,
-    hasArgs: false
+    hasArgs: false,
 }
