@@ -66,16 +66,33 @@ func maxOptionColsize(op *OptionParser, max, limit int) int {
             max = length
         }
     }
+    for _, sub := range op.optGroups {
+        submax := maxOptionColsize(sub, max, limit);
+        if submax > max {
+            max = submax
+        }
+    }
     return max
 }
 
 
-func optionUsage(lines *[]string, opt *Option, format string, width int, max_argcol int) {
-    optstr := opt.String();
-    help := linewrap(opt.getHelp(), width, len(optstr) > max_argcol);
-    appendString(lines, fmt.Sprintf(format, optstr, help[0]))
-    for _, line := range help[1:len(help)] {
-        appendString(lines, fmt.Sprintf(format, "", line));
+func optionUsage(lines *[]string, op *OptionParser, format string, width, max_argcol int) {
+    for _, opt := range op.options {
+        optstr := opt.String();
+        help := linewrap(opt.getHelp(), width, len(optstr) > max_argcol);
+        appendString(lines, fmt.Sprintf(format, optstr, help[0]))
+        for _, line := range help[1:len(help)] {
+            appendString(lines, fmt.Sprintf(format, "", line));
+        }
+    }
+    for grp, sub := range op.optGroups {
+        appendString(lines, "");
+        appendString(lines, fmt.Sprintf("%s Options:", grp));
+        ulines := linewrap(sub.usage, width-2, false);
+        for _, line := range ulines {
+            appendString(lines, fmt.Sprintf("  %s", line))
+        }
+        optionUsage(lines, sub, format, width, max_argcol);
     }
 }
 
@@ -124,9 +141,6 @@ func (op *OptionParser) Usage() string {
     if width < min_width { width = 55; }
     format := fmt.Sprintf(fmt.Sprintf("%%%ds%%%%-%%ds%%%ds%%%%s", indent, colsep),
                            " ", max, " ");
-
-    for _, opt := range op.options {
-        optionUsage(&lines, &opt, format, width, max_argcol);
-    }
+    optionUsage(&lines, op, format, width, max_argcol);
     return strings.Join(lines, "\n");
 }

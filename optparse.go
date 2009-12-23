@@ -30,7 +30,7 @@ import "strings"
 
 type OptionParser struct {
     options []Option;
-    optStrings map[string]Option;
+    optGroups map[string]*OptionParser;
     usage string;
     flags uint32;
 }
@@ -44,10 +44,23 @@ const (
 func NewParser(usage string, flags uint32) *OptionParser {
     ret := new(OptionParser);
     ret.options = make([]Option, 0, 10);
-    ret.optStrings = make(map[string]Option);
+    ret.optGroups = make(map[string]*OptionParser);
     ret.usage = usage;
     ret.flags = flags;
     return ret;
+}
+
+func OptionGroup(op *OptionParser, title string, desc string) *OptionParser {
+    ret,ok := op.optGroups[title];
+    if !ok {
+        ret = new(OptionParser);
+        ret.options = make([]Option, 0, 4);
+        ret.optGroups = make(map[string]*OptionParser, 0);
+        ret.usage = desc;
+        ret.flags = op.flags;
+        op.optGroups[title] = ret;
+    }
+    return ret
 }
 
 func (op *OptionParser) appendOpt(opt Option) {
@@ -65,6 +78,11 @@ func (op *OptionParser) matches(s string) Option {
     for _, option := range op.options {
         if option.matches(s) {
             return option;
+        }
+    }
+    for _, optgrp := range op.optGroups {
+        if sub := optgrp.matches(s); sub != nil {
+            return sub;
         }
     }
     return nil;
