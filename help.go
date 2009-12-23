@@ -29,6 +29,7 @@ import "os"
 import "path"
 import "strings"
 import "utf8"
+import "strconv"
 
 // Splits the string s over a number of lines width characters wide.
 func linewrap(s string, width int) []string {
@@ -55,8 +56,37 @@ func helpLines(opts []Option) []string {
 }
 
 func (op *OptionParser) Usage() string {
-    const COLUMNS = 80;
-    const MAX_COLUMN = 24;
+
+	//   |  -a, --arg    help information for arg      |
+    //   |  -b           help information for b        |
+    //   |  -l, --long-arg                             |
+    //   |               help information for a long   |
+    //   |               argument spanning multiple    |
+    //   |               lines                         |
+    //   ^--^---------^--^--------------------------^--^
+    //    |     |     ||            |                | |
+    //    |    max    |`-colsep   width              | `-COLUMNS
+    //    indent      max_argcol                     `-gutter
+    //
+    //    COLUMNS    = read from env var of same name, defaulting to 80
+    //                 if env var not set or setting is too small (min_width)
+    //    min_argcol = minimum value of max
+
+	const (
+		indent = 2;
+		colsep = 2;
+		gutter = 1;
+        min_argcol = 4;
+        min_width = 5;
+	)
+    filler := indent + colsep + gutter;
+	COLUMNS,enverr := strconv.Atoi(os.Getenv("COLUMNS")); 
+	if enverr != nil || COLUMNS < min_width {
+		COLUMNS = 80;
+	}
+	max_argcol := COLUMNS / 3 - 2;
+	if max_argcol < min_argcol { max_argcol = min_argcol; }
+
     optStrs := make([]string, len(op.options));
     optLong := make([]bool, len(op.options));
     //helps := make([][]string, len(op.options));
@@ -72,17 +102,20 @@ func (op *OptionParser) Usage() string {
         optStr := opt.String();
         optStrs[i] = optStr;
         length := utf8.RuneCountInString(optStr);
-        if length > max && length < MAX_COLUMN - 4 {
+        if length > max && length < max_argcol {
             max = length;
         }
-        optLong[i] = length > MAX_COLUMN - 4;
+        optLong[i] = length >= max_argcol;
     }
-    width := COLUMNS - max - 4;
-    format := fmt.Sprintf("  %%-%ds  %%s", max);
+    width := COLUMNS - max - filler;
+	if width < min_width { width = 55; }
+	format := fmt.Sprintf(fmt.Sprintf("%%%ds%%%%-%%ds%%%ds%%%%s", indent, colsep),
+		                   " ", max, " ");
+
     for i, opt := range op.options {
         help := linewrap(opt.getHelp(), width);
         if optLong[i] {
-            appendString(&lines, "  " + optStrs[i]);
+            appendString(&lines, fmt.Sprintf(format, optStrs[i], ""));
             if opt.getHelp() == "" {
                 continue;
             }
@@ -91,7 +124,7 @@ func (op *OptionParser) Usage() string {
             }
         } else {
             if opt.getHelp() == "" {
-                appendString(&lines, "  " + optStrs[i]);
+                appendString(&lines, fmt.Sprintf(format, optStrs[i], ""));
                 continue;
             }
             firstLine := fmt.Sprintf(format, optStrs[i], help[0]);
