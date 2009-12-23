@@ -81,7 +81,7 @@ func optionUsage(lines *[]string, opt *Option, format string, width int, max_arg
 
 func (op *OptionParser) Usage() string {
 
-	//   |  -a, --arg    help information for arg      |
+    //   |  -a, --arg    help information for arg      |
     //   |  -b           help information for b        |
     //   |  -l, --long-arg                             |
     //   |               help information for a long   |
@@ -96,20 +96,20 @@ func (op *OptionParser) Usage() string {
     //                 if env var not set or setting is too small (min_width)
     //    min_argcol = minimum value of max
 
-	const (
-		indent = 2;
-		colsep = 2;
-		gutter = 1;
+    const (
+        indent = 2;
+        colsep = 2;
+        gutter = 1;
         min_argcol = 4;
         min_width = 5;
-	)
+    )
     filler := indent + colsep + gutter;
-	COLUMNS,enverr := strconv.Atoi(os.Getenv("COLUMNS")); 
-	if enverr != nil || COLUMNS < min_width {
-		COLUMNS = 80;
-	}
-	max_argcol := COLUMNS / 3 - 2;
-	if max_argcol < min_argcol { max_argcol = min_argcol; }
+    COLUMNS,enverr := strconv.Atoi(os.Getenv("COLUMNS")); 
+    if enverr != nil || COLUMNS < min_width {
+        COLUMNS = 80;
+    }
+    max_argcol := COLUMNS / 3 - 2;
+    if max_argcol < min_argcol { max_argcol = min_argcol; }
 
     //helps := make([][]string, len(op.options));
     //lines := make([]string, 0, 10);
