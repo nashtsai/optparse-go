@@ -121,12 +121,14 @@ func (op *OptionParser) Usage() string {
         min_width = 5;
     )
     filler := indent + colsep + gutter;
-    COLUMNS,enverr := strconv.Atoi(os.Getenv("COLUMNS")); 
+    COLUMNS, enverr := strconv.Atoi(os.Getenv("COLUMNS"));
     if enverr != nil || COLUMNS < min_width {
         COLUMNS = 80;
     }
     max_argcol := COLUMNS / 3 - 2;
-    if max_argcol < min_argcol { max_argcol = min_argcol; }
+    if max_argcol < min_argcol {
+        max_argcol = min_argcol;
+    }
 
     //helps := make([][]string, len(op.options));
     //lines := make([]string, 0, 10);
@@ -138,7 +140,13 @@ func (op *OptionParser) Usage() string {
     };
     max := maxOptionColsize(op, 0, max_argcol);
     width := COLUMNS - max - filler;
-    if width < min_width { width = 55; }
+    if width < min_width {
+        width = 55;
+    }
+    // What I wouldn't give for %*s specifiers...
+    // %%%ds%%%%-%%ds%%%ds%%%%s
+    // %2s%%-%ds%2s%%s
+    //   %-24s  %s
     format := fmt.Sprintf(fmt.Sprintf("%%%ds%%%%-%%ds%%%ds%%%%s", indent, colsep),
                            " ", max, " ");
     optionUsage(&lines, op, format, width, max_argcol);
