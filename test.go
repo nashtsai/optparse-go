@@ -57,8 +57,8 @@ func main() {
     fmt.Printf("--bar=[%s]\n", strings.Join(*bar, ","));
     fmt.Printf("--count=%d\n", *c);
     fmt.Printf("--baz=[%s]\n", strings.Join(*baz, ","));
-    fmt.Printf("--xflag=%t\n", *xflag);
-    fmt.Printf("--yint=%d\n", *yint);
+    fmt.Printf("--xflag=%t\n", *sub1);
+    fmt.Printf("--yint=%d\n", *sub2);
     if len(*list) > 0 {
         fmt.Printf("--list=[\n");
         for i := 0; i < len(*list); i++ {
