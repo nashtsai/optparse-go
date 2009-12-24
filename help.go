@@ -29,13 +29,17 @@ import "os"
 import "path"
 import "strings"
 import "utf8"
+import "strconv"
 
 // Splits the string s over a number of lines width characters wide.
-func linewrap(s string, width int) []string {
+func linewrap(s string, width int, firstblank bool) []string {
     start := 0;
     length := -1;
     words := splitWords(s);
     lines := make([]string, 0, 5);
+    if firstblank {
+        appendString(&lines, "");
+    }
     for i, word := range words {
         wordLen := utf8.RuneCountInString(word);
         if length + wordLen + 1 > width {
@@ -54,52 +58,89 @@ func helpLines(opts []Option) []string {
     return nil;
 }
 
+
+func maxOptionColsize(op *OptionParser, max, limit int) int {
+    for _, opt := range op.options {
+        length := utf8.RuneCountInString(opt.String());
+        if length > max && length < limit {
+            max = length
+        }
+    }
+    for _, sub := range op.optGroups {
+        submax := maxOptionColsize(sub, max, limit);
+        if submax > max {
+            max = submax
+        }
+    }
+    return max
+}
+
+
+func optionUsage(lines *[]string, op *OptionParser, format string, width, max_argcol int) {
+    for _, opt := range op.options {
+        optstr := opt.String();
+        help := linewrap(opt.getHelp(), width, len(optstr) > max_argcol);
+        appendString(lines, fmt.Sprintf(format, optstr, help[0]))
+        for _, line := range help[1:len(help)] {
+            appendString(lines, fmt.Sprintf(format, "", line));
+        }
+    }
+    for grp, sub := range op.optGroups {
+        appendString(lines, "");
+        appendString(lines, fmt.Sprintf("%s Options:", grp));
+        ulines := linewrap(sub.usage, width-2, false);
+        for _, line := range ulines {
+            appendString(lines, fmt.Sprintf("  %s", line))
+        }
+        optionUsage(lines, sub, format, width, max_argcol);
+    }
+}
+
 func (op *OptionParser) Usage() string {
-    const COLUMNS = 80;
-    const MAX_COLUMN = 24;
-    optStrs := make([]string, len(op.options));
-    optLong := make([]bool, len(op.options));
+
+    //   |  -a, --arg    help information for arg      |
+    //   |  -b           help information for b        |
+    //   |  -l, --long-arg                             |
+    //   |               help information for a long   |
+    //   |               argument spanning multiple    |
+    //   |               lines                         |
+    //   ^--^---------^--^--------------------------^--^
+    //    |     |     ||            |                | |
+    //    |    max    |`-colsep   width              | `-COLUMNS
+    //    indent      max_argcol                     `-gutter
+    //
+    //    COLUMNS    = read from env var of same name, defaulting to 80
+    //                 if env var not set or setting is too small (min_width)
+    //    min_argcol = minimum value of max
+
+    const (
+        indent = 2;
+        colsep = 2;
+        gutter = 1;
+        min_argcol = 4;
+        min_width = 5;
+    )
+    filler := indent + colsep + gutter;
+    COLUMNS,enverr := strconv.Atoi(os.Getenv("COLUMNS")); 
+    if enverr != nil || COLUMNS < min_width {
+        COLUMNS = 80;
+    }
+    max_argcol := COLUMNS / 3 - 2;
+    if max_argcol < min_argcol { max_argcol = min_argcol; }
+
     //helps := make([][]string, len(op.options));
     //lines := make([]string, 0, 10);
     _, binName := path.Split(os.Args[0]);
     lines := []string {
         fmt.Sprintf("Usage: %s %s", binName, op.usage),
         "",
-        "Options:"
+        "Options:",
     };
-    max := 0;
-    for i, opt := range op.options {
-        optStr := opt.String();
-        optStrs[i] = optStr;
-        length := utf8.RuneCountInString(optStr);
-        if length > max && length < MAX_COLUMN - 4 {
-            max = length;
-        }
-        optLong[i] = length > MAX_COLUMN - 4;
-    }
-    width := COLUMNS - max - 4;
-    format := fmt.Sprintf("  %%-%ds  %%s", max);
-    for i, opt := range op.options {
-        help := linewrap(opt.getHelp(), width);
-        if optLong[i] {
-            appendString(&lines, "  " + optStrs[i]);
-            if opt.getHelp() == "" {
-                continue;
-            }
-            for _, line := range help {
-                appendString(&lines, fmt.Sprintf(format, "", line));
-            }
-        } else {
-            if opt.getHelp() == "" {
-                appendString(&lines, "  " + optStrs[i]);
-                continue;
-            }
-            firstLine := fmt.Sprintf(format, optStrs[i], help[0]);
-            appendString(&lines, firstLine);
-            for _, line := range help[1:len(help)] {
-                appendString(&lines, fmt.Sprintf(format, "", line));
-            }
-        }
-    }
+    max := maxOptionColsize(op, 0, max_argcol);
+    width := COLUMNS - max - filler;
+    if width < min_width { width = 55; }
+    format := fmt.Sprintf(fmt.Sprintf("%%%ds%%%%-%%ds%%%ds%%%%s", indent, colsep),
+                           " ", max, " ");
+    optionUsage(&lines, op, format, width, max_argcol);
     return strings.Join(lines, "\n");
 }

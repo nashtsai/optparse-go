@@ -86,6 +86,29 @@ func TestParser(t *testing.T) {
     args, err = p.ParseArgs([]string{"-cFOO=BAR"});
     checkArgs(t, args, err);
     assertEqual(t, *c, "FOO=BAR", "Failed to parse -oFOO=BAR");
+
+    g1 := op.OptionGroup(p, "SubGroup One", "Options specific to this subgruop");
+    s1 := g1.Int("-s", "--subone");
+    *b = 0;
+    args,err = p.ParseArgs([]string{"-aa", "10", "-s", "11", "-bbb"})
+    checkArgs(t, args, err);
+    assertEqual(t, *a, 10, "Failed to set main level leading option");
+    assertEqual(t, *s1, 11, "Failed to set sub-option");
+    assertEqual(t, *b, 3, "Failed to set main level trailing option");
+    g2 := op.OptionGroup(p, "SubGroup Two", "");
+    s2 := g2.Int("-x");
+    s3 := g2.Int("-y");
+    g1_2 := op.OptionGroup(g1, "SubGroup One secondary subgroup", "nested subgroups")
+    s4 := g1_2.Int("-z")
+    *b = 0;
+    args,err = p.ParseArgs([]string{"-aa", "20", "--subone=21", "-y", "24", "-bb", "-z", "25", "-x", "23", "-b"})
+    checkArgs(t, args, err);
+    assertEqual(t, *a, 20, "Failed to set main level leading option");
+    assertEqual(t, *s1, 21, "Failed to set sub-option");
+    assertEqual(t, *b, 3, "Failed to set interim main level option");
+    assertEqual(t, *s2, 23, "Failed to set second sublevel option");
+    assertEqual(t, *s3, 24, "Failed to set second sublevel second option");
+    assertEqual(t, *s4, 25, "Failed to set nested sublevel option");
 }
 
 func TestBool(t *testing.T) {

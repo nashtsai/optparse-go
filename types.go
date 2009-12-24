@@ -68,10 +68,7 @@ type StringType struct {
     option;
 }
 
-func (s *StringType)
-parseArg(arg []string)
-(interface{}, os.Error)
-{
+func (s *StringType) parseArg(arg []string) (interface{}, os.Error) {
     return arg[0], nil;
 }
 
@@ -118,10 +115,7 @@ type IntType struct {
     option;
 }
 
-func (it *IntType)
-parseArg(arg []string)
-(interface{}, os.Error)
-{
+func (it *IntType) parseArg(arg []string) (interface{}, os.Error) {
     i, ok := strconv.Atoi(arg[0]);
     if ok != nil {
         return nil, os.NewError(fmt.Sprintf("'%s' is not an integer", arg[0]));
@@ -218,10 +212,7 @@ type StringArrayType struct {
     option;
 }
 
-func (sa *StringArrayType)
-parseArg(arg []string)
-(interface{}, os.Error)
-{
+func (sa *StringArrayType) parseArg(arg []string) (interface{}, os.Error) {
     if len(arg) == 1 {
         return arg[0], nil;
     } else {
@@ -278,10 +269,7 @@ type IntArrayType struct {
     option;
 }
 
-func (ia *IntArrayType)
-parseArg(arg []string)
-(interface{}, os.Error)
-{
+func (ia *IntArrayType) parseArg(arg []string) (interface{}, os.Error) {
     if len(arg) == 1 {
         i, ok := strconv.Atoi(arg[0]);
         if ok != nil {
@@ -350,10 +338,7 @@ type StringArrayArrayType struct {
     option;
 }
 
-func (sa *StringArrayArrayType)
-parseArg(arg []string)
-(interface{}, os.Error)
-{
+func (sa *StringArrayArrayType) parseArg(arg []string) (interface{}, os.Error) {
     return arg, nil;
 }
 
