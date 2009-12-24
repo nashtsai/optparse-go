@@ -101,7 +101,7 @@ func TestParser(t *testing.T) {
     g1_2 := op.OptionGroup(g1, "SubGroup One secondary subgroup", "nested subgroups")
     s4 := g1_2.Int("-z")
     *b = 0;
-    args,err = p.ParseArgs([]string{"-aa", "20", "--subone=21", "-y", "24", "-bb", "-z", "25", "-x", "23", "-b"})
+    args,err = p.ParseArgs([]string{"-aa", "20", "--subone=21", "-y", "24", "-b", "-b", "-z", "25", "-x", "23", "-b"})
     checkArgs(t, args, err);
     assertEqual(t, *a, 20, "Failed to set main level leading option");
     assertEqual(t, *s1, 21, "Failed to set sub-option");
