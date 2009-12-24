@@ -44,6 +44,9 @@ var _ = p.Callback("--callback-arg", "-a", func(i int, s string) {
     fmt.Printf("Callback: %d %s\n", i, s);
 }, op.Help(s))
 var _ = p.Help("-h", "--help")
+var grp = op.OptionGroup(p, "subgroup", "Subgroup help information")
+var sub1 = grp.Bool("-x", "--xflag", op.Help("subflag"))
+var sub2 = grp.Int("-y", "--yint", op.Help("int subflag"))
 var args, _ = p.Parse()
 
 func main() {
@@ -54,6 +57,8 @@ func main() {
     fmt.Printf("--bar=[%s]\n", strings.Join(*bar, ","));
     fmt.Printf("--count=%d\n", *c);
     fmt.Printf("--baz=[%s]\n", strings.Join(*baz, ","));
+    fmt.Printf("--xflag=%t\n", *xflag);
+    fmt.Printf("--yint=%d\n", *yint);
     if len(*list) > 0 {
         fmt.Printf("--list=[\n");
         for i := 0; i < len(*list); i++ {

@@ -75,10 +75,7 @@ func destTypecheck(dest, value interface{}) bool {
     return reflect.Typeof(dest).(*reflect.PtrType).Elem() == reflect.Typeof(value);
 }
 
-func (op *OptionParser)
-createOption(args, dest interface{}, typ Option, action *Action)
-Option
-{
+func (op *OptionParser) createOption(args, dest interface{}, typ Option, action *Action) Option {
     v := reflect.NewValue(args).(*reflect.StructValue);
     opts := make([]string, v.NumField());
     max := 0;
