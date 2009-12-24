@@ -52,7 +52,7 @@ var StoreTrue = &Action{
         *c.getDest().(*bool) = true;
         return nil;
     },
-   hasArgs: false,
+    hasArgs: false,
 }
 
 // StoreFalse
