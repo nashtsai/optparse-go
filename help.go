@@ -29,7 +29,19 @@ import "os"
 import "path"
 import "strings"
 import "utf8"
-import "strconv"
+import "syscall"
+import "unsafe"
+
+const TIOCGWINSZ = 0x5413;
+type winsize struct {
+    ws_row, ws_col, ws_xpixel, ws_ypixel uint16;
+}
+
+func getColumns() (int, uintptr) {
+    var w winsize;
+    _, _, err := syscall.Syscall(syscall.SYS_IOCTL, 0, TIOCGWINSZ, uintptr(unsafe.Pointer(&w)));
+    return int(w.ws_col), err;
+}
 
 // Splits the string s over a number of lines width characters wide.
 func linewrap(s string, width int, firstblank bool) []string {
@@ -121,8 +133,8 @@ func (op *OptionParser) Usage() string {
         min_width = 5;
     )
     filler := indent + colsep + gutter;
-    COLUMNS, enverr := strconv.Atoi(os.Getenv("COLUMNS"));
-    if enverr != nil || COLUMNS < min_width {
+    COLUMNS, err := getColumns();
+    if err != 0 || COLUMNS < min_width {
         COLUMNS = 80;
     }
     max_argcol := COLUMNS / 3 - 2;
