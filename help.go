@@ -32,14 +32,14 @@ import "utf8"
 import "syscall"
 import "unsafe"
 
-const TIOCGWINSZ = 0x5413;
+const _TIOCGWINSZ = 0x5413;
 type winsize struct {
     ws_row, ws_col, ws_xpixel, ws_ypixel uint16;
 }
 
 func getColumns() (int, uintptr) {
     var w winsize;
-    _, _, err := syscall.Syscall(syscall.SYS_IOCTL, 0, TIOCGWINSZ, uintptr(unsafe.Pointer(&w)));
+    _, _, err := syscall.Syscall(syscall.SYS_IOCTL, 0, _TIOCGWINSZ, uintptr(unsafe.Pointer(&w)));
     return int(w.ws_col), err;
 }
 
