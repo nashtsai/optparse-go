@@ -170,10 +170,13 @@ func TestStringArray(t *testing.T) {
     assertEqual(t, *a, []string{}, "StringArray did not default to empty array");
     b := p.StringArray("-b", op.Nargs(3), op.Store);
     assertEqual(t, *b, []string{}, "StringArray with Nargs did not default to empty array");
-    args, err := p.ParseArgs([]string{"-a", "one", "-a", "two", "-b", "foo", "bar", "baz"});
+    c := p.StringArray("-c", op.Default([]string{"first"}))
+    assertEqual(t, *c, []string{"first"}, "StringArray with default did not get correct default")
+    args, err := p.ParseArgs([]string{"-a", "one", "-a", "two", "-b", "foo", "bar", "baz", "-c", "second"});
     checkArgs(t, args, err);
     assertEqual(t, *a, []string{"one", "two"}, "StringArray did not append successfully");
     assertEqual(t, *b, []string{"foo", "bar", "baz"}, "StringArray did not parse Nargs(3) successfully");
+    assertEqual(t, *c, []string{"first", "second"}, "StringArray did not append to default successfully")
 }
 
 func TestIntArray(t *testing.T) {
