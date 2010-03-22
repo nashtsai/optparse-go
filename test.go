@@ -47,9 +47,9 @@ var _ = p.Help("-h", "--help")
 var grp = op.OptionGroup(p, "subgroup", "Subgroup help information")
 var sub1 = grp.Bool("-x", "--xflag", op.Help("subflag"))
 var sub2 = grp.Int("-y", "--yint", op.Help("int subflag"))
-var args, _ = p.Parse()
 
 func main() {
+    args, _ := p.Parse()
     fmt.Printf("--flag=%t\n", *flag);
     fmt.Printf("--invert=%t\n", *invert);
     fmt.Printf("--foo=%s\n", *foo);
