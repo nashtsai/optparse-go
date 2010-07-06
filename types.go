@@ -52,13 +52,13 @@ func (b *BoolType) validAction(action *Action, nargs int) bool {
     return false;
 }
 
-func (op *OptionParser) Bool(a...) *bool {
+func (op *OptionParser) Bool(a  ... interface{}) *bool {
     dest := new(bool);
     op.BoolVar(dest, a);
     return dest;
 }
 
-func (op *OptionParser) BoolVar(dest *bool, a...) {
+func (op *OptionParser) BoolVar(dest *bool, a ... interface{}) {
     typ := new(BoolType);
     op.createOption(a, dest, typ, StoreTrue);
 }
@@ -94,13 +94,13 @@ func (s *StringType) validAction(action *Action, nargs int) bool {
     return false
 }
 
-func (op *OptionParser) String(a...) *string {
+func (op *OptionParser) String(a ... interface{}) *string {
     dest := new(string);
     op.StringVar(dest, a);
     return dest;
 }
 
-func (op *OptionParser) StringVar(dest *string, a...) {
+func (op *OptionParser) StringVar(dest *string, a ... interface{}) {
     typ := new(StringType);
     op.createOption(a, dest, typ, Store);
 }
@@ -149,13 +149,13 @@ func (it *IntType) increment(dest interface{}) {
     *ptr++;
 }
 
-func (op *OptionParser) Int(a...) *int {
+func (op *OptionParser) Int(a ... interface{}) *int {
     dest := new(int);
     op.IntVar(dest, a);
     return dest;
 }
 
-func (op *OptionParser) IntVar(dest *int, a...) {
+func (op *OptionParser) IntVar(dest *int, a ... interface{}) {
     typ := new(IntType);
     op.createOption(a, dest, typ, Store);
 }
@@ -196,7 +196,7 @@ func (cb *CallbackType) performAction(arg []string) os.Error {
     return nil;
 }
 
-func (op *OptionParser) Callback(a...) interface{} {
+func (op *OptionParser) Callback(a ... interface{}) interface{} {
     typ := new(CallbackType);
     op.createOption(a, nil, typ, nil);
     return nil;
@@ -252,14 +252,14 @@ func (sa *StringArrayType) append(dest interface{}, val interface{}) {
     appendString(a, val.(string));
 }
 
-func (op *OptionParser) StringArray(a...) *[]string {
+func (op *OptionParser) StringArray(a ... interface{}) *[]string {
     dest := new([]string);
     *dest = make([]string, 0, 5);
     op.StringArrayVar(dest, a);
     return dest;
 }
 
-func (op *OptionParser) StringArrayVar(dest *[]string, a...) {
+func (op *OptionParser) StringArrayVar(dest *[]string, a ... interface{}) {
     typ := new(StringArrayType);
     op.createOption(a, dest, typ, Append);
 }
@@ -321,14 +321,14 @@ func (ia *IntArrayType) append(dest interface{}, val interface{}) {
     appendInt(i, val.(int));
 }
 
-func (op *OptionParser) IntArray(a...) *[]int {
+func (op *OptionParser) IntArray(a ... interface{}) *[]int {
     dest := new([]int);
     *dest = make([]int, 0, 5);
     op.IntArrayVar(dest, a);
     return dest;
 }
 
-func (op *OptionParser) IntArrayVar(dest *[]int, a...) {
+func (op *OptionParser) IntArrayVar(dest *[]int, a ... interface{}) {
     typ := new(IntArrayType);
     op.createOption(a, dest, typ, Append);
 }
@@ -369,14 +369,14 @@ func (sa *StringArrayArrayType) append(dest, val interface{}) {
     appendStringArray(a, val.([]string));
 }
 
-func (op *OptionParser) StringArrayArray(a...) *[][]string {
+func (op *OptionParser) StringArrayArray(a ... interface{}) *[][]string {
     dest := new([][]string);
     *dest = make([][]string, 0, 5);
     op.StringArrayArrayVar(dest, a);
     return dest;
 }
 
-func (op *OptionParser) StringArrayArrayVar(dest *[][]string, a...) {
+func (op *OptionParser) StringArrayArrayVar(dest *[][]string, a ... interface{}) {
     typ := new(StringArrayArrayType);
     op.createOption(a, dest, typ, Append);
 }
@@ -398,7 +398,7 @@ func (h *HelpType) performAction(arg []string) os.Error {
     return nil;
 }
 
-func (op *OptionParser) Help(a...) interface{} {
+func (op *OptionParser) Help(a ... interface{}) interface{} {
     typ := new(HelpType);
     typ.op = op;
     op.createOption(a, nil, typ, helpAction);

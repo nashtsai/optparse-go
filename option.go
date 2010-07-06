@@ -75,16 +75,14 @@ func destTypecheck(dest, value interface{}) bool {
     return reflect.Typeof(dest).(*reflect.PtrType).Elem() == reflect.Typeof(value);
 }
 
-func (op *OptionParser) createOption(args, dest interface{}, typ Option, action *Action) Option {
-    v := reflect.NewValue(args).(*reflect.StructValue);
-    opts := make([]string, v.NumField());
+func (op *OptionParser) createOption(args []interface{}, dest interface{}, typ Option, action *Action) Option {
+    opts := make([]string, len(args));
     max := 0;
     opt := typ.getOption();
     opt.typ = typ;
     opt.dest = dest;
-    for i := 0; i < v.NumField(); i++ {
-        field := v.Field(i);
-        switch f := field.Interface().(type) {
+    for _, field:= range args {
+        switch f := field.(type) {
         case string:
             opts[max] = f;
             max++;
@@ -120,11 +118,10 @@ func (op *OptionParser) createOption(args, dest interface{}, typ Option, action 
             opt.const_ = f.x;
             action = StoreConst;
         default:
-            fn, ok := field.(*reflect.FuncValue);
+            fnType, ok := reflect.Typeof(field).(*reflect.FuncType)
             if ok {
-                fnType := fn.Type().(*reflect.FuncType);
-                opt.nargs = fnType.NumIn();
-                typ.(*CallbackType).fn = f;
+                opt.nargs = fnType.NumIn()
+                typ.(*CallbackType).fn = f
             }
         }
     }
