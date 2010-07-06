@@ -1,6 +1,6 @@
 include $(GOROOT)/src/Make.$(GOARCH)
 
-TARG=optparse
+TARG=optparse-go.googlecode.com/hg/optparse
 GOFILES=\
 	optparse.go\
 	actions.go\

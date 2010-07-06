@@ -27,7 +27,7 @@ package main
 import "fmt"
 import "strings"
 
-import op "optparse"
+import op "optparse-go.googlecode.com/hg/optparse"
 
 var s = "This is some sample text. Watermelon. This is some sample text. Watermelon. This is some sample text.\n Watermelon.     This is some sample text. Watermelon. This is some sample text. Watermelon."
 var p = op.NewParser("[options] args...", op.EXIT_ON_ERROR | op.KEEP_UNKNOWN_OPTIONS)
