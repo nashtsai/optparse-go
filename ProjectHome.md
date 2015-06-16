@@ -1,0 +1,1 @@
+A command-line option parser, written in Go, and loosely based on Python's optparse library. This library has more features than the "flag" package in the standard library. New features include callbacks, "append" options, and multiple-argument options.
